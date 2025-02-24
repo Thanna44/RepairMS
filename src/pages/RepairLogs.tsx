@@ -135,6 +135,7 @@ export default function RepairLogs() {
         status: editForm.status,
         priority: editForm.priority,
         assigned_user_id: editForm.assigned_user_id || null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", selectedLog.id);
 
