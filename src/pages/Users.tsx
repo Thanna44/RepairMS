@@ -17,7 +17,6 @@ export default function UsersPage() {
   const [role, setRole] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -46,30 +45,25 @@ export default function UsersPage() {
 
   async function addUser(event: React.FormEvent) {
     event.preventDefault();
-    setIsSubmitting(true);
     try {
       const { data, error } = await supabase
         .from("users")
-        .insert([{ email, full_name: fullName, role }])
-        .select(); // เพิ่ม .select() เพื่อให้ได้ข้อมูลที่เพิ่มกลับมา
+        .insert([{ email, full_name: fullName, role }]);
 
       if (error) {
         throw error;
       }
 
-      if (data) {
-        // อัพเดท users state ด้วยข้อมูลใหม่
-        setUsers((prevUsers) => [data[0], ...prevUsers]);
-        // Clear form
-        setEmail("");
-        setFullName("");
-        setRole("");
-        setShowForm(false);
-      }
+      // Update the user list with the newly added user
+      setUsers((prevUsers) => [...prevUsers, ...data]);
+      // Clear the form fields
+      setEmail("");
+      setFullName("");
+      setRole("");
     } catch (error) {
       console.error("Error adding user:", error);
     } finally {
-      setIsSubmitting(false);
+      setShowForm(false);
     }
   }
 
@@ -134,7 +128,7 @@ export default function UsersPage() {
 
       <button
         onClick={() => setShowForm(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 mb-2"
+        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
       >
         Add User
       </button>
@@ -181,16 +175,8 @@ export default function UsersPage() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white p-2"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Adding..."
-                    : editingUser
-                    ? "Update User"
-                    : "Add User"}
+                <button type="submit" className="bg-blue-500 text-white p-2">
+                  {editingUser ? "Update User" : "Add User"}
                 </button>
               </div>
             </form>

@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { PenTool, AlertCircle, CheckCircle, Search } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import repairDefaultPartsConfig from "../config/repairDefaultParts.json";
 
 type User = {
   id: string;
@@ -19,6 +20,22 @@ type RepairLog = {
   created_at: string;
   updated_at: string;
   assigned_user_id: string | null;
+  spare_parts: RepairLogSparePart[];
+};
+
+type SparePart = {
+  id: string;
+  name: string;
+  part_number: string;
+  quantity: number;
+  price: number;
+};
+
+type RepairLogSparePart = {
+  id?: string;
+  spare_part_id: string;
+  quantity: number;
+  spare_part: SparePart;
 };
 
 export default function RepairLogs() {
@@ -40,10 +57,16 @@ export default function RepairLogs() {
     "created_at"
   );
   const [searchTerm, setSearchTerm] = useState("");
+  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
+  const [selectedSpareParts, setSelectedSpareParts] = useState<
+    RepairLogSparePart[]
+  >([]);
+  const [sparePartSearch, setSparePartSearch] = useState("");
 
   useEffect(() => {
     fetchRepairLogs();
     fetchUsers();
+    fetchSpareParts();
   }, []);
 
   useEffect(() => {
@@ -78,6 +101,17 @@ export default function RepairLogs() {
     } catch (error) {
       console.error("Error fetching users:", error);
     }
+  }
+
+  async function fetchSpareParts() {
+    const { data, error } = await supabase.from("spare_parts").select("*");
+
+    if (error) {
+      console.error("Error fetching spare parts:", error);
+      return;
+    }
+
+    setSpareParts(data || []);
   }
 
   const getPriorityColor = (priority: string) => {
@@ -115,6 +149,7 @@ export default function RepairLogs() {
       priority: log.priority,
       assigned_user_id: log.assigned_user_id || "",
     });
+    setSelectedSpareParts(log.spare_parts || []);
     setIsEditModalOpen(true);
   };
 
@@ -165,12 +200,72 @@ export default function RepairLogs() {
     fetchRepairLogs();
   };
 
+  const handleAddSparePart = (sparePartId: string) => {
+    const sparePart = spareParts.find((sp) => sp.id === sparePartId);
+    if (!sparePart) return;
+
+    setSelectedSpareParts([
+      ...selectedSpareParts,
+      {
+        spare_part_id: sparePart.id,
+        quantity: 1,
+        spare_part: sparePart,
+      },
+    ]);
+  };
+
+  const handleSparePartQuantityChange = (
+    sparePartId: string,
+    quantity: number
+  ) => {
+    setSelectedSpareParts(
+      selectedSpareParts.map((sp) =>
+        sp.spare_part_id === sparePartId ? { ...sp, quantity } : sp
+      )
+    );
+  };
+
+  const handleRemoveSparePart = (sparePartId: string) => {
+    setSelectedSpareParts(
+      selectedSpareParts.filter((sp) => sp.spare_part_id !== sparePartId)
+    );
+  };
+
+  useEffect(() => {
+    const defaultConfig = repairDefaultPartsConfig.defaultParts.find(
+      (config) => config.title === editForm.title
+    );
+
+    if (defaultConfig) {
+      const defaultParts = spareParts.filter((sp) =>
+        defaultConfig.part_number.includes(sp.part_number)
+      );
+
+      const newSpareParts = defaultParts.map((part) => ({
+        spare_part_id: part.id,
+        quantity: 1,
+        spare_part: part,
+      }));
+
+      // Only add parts that aren't already selected
+      const partsToAdd = newSpareParts.filter(
+        (newPart) =>
+          !selectedSpareParts.some(
+            (selected) => selected.spare_part_id === newPart.spare_part_id
+          )
+      );
+
+      if (partsToAdd.length > 0) {
+        setSelectedSpareParts([...selectedSpareParts, ...partsToAdd]);
+      }
+    }
+  }, [editForm.title, spareParts]);
+
   const filteredLogs = logs.filter((log) => {
     const dateToCheck =
       dateField === "created_at" ? log.created_at : log.updated_at;
     const logDate = new Date(dateToCheck);
 
-    // กรองตามช่วงวันที่
     const isInDateRange =
       ((!startDate || logDate >= startDate) &&
         (!endDate || logDate <= endDate)) ||
@@ -178,7 +273,6 @@ export default function RepairLogs() {
         endDate &&
         logDate.toDateString() === startDate.toDateString());
 
-    // กรองตามคำค้นหา
     const matchesSearch =
       !searchTerm ||
       log.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -187,7 +281,6 @@ export default function RepairLogs() {
     return isInDateRange && matchesSearch;
   });
 
-  // เพิ่มฟังก์ชันสำหรับเคลียร์ filter
   const clearFilters = () => {
     setStartDate(null);
     setEndDate(null);
@@ -430,6 +523,66 @@ export default function RepairLogs() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Spare Parts
+                  </label>
+                  <div className="mt-1 space-y-4">
+                    <div className="flex space-x-2">
+                      <select
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        value=""
+                        onChange={(e) => handleAddSparePart(e.target.value)}
+                      >
+                        <option value="">Select a spare part...</option>
+                        {spareParts
+                          .filter(
+                            (sp) =>
+                              !selectedSpareParts.some(
+                                (selected) => selected.spare_part_id === sp.id
+                              )
+                          )
+                          .map((sp) => (
+                            <option key={sp.id} value={sp.id}>
+                              {sp.name} ({sp.part_number})
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      {selectedSpareParts.map((sp) => (
+                        <div
+                          key={sp.spare_part_id}
+                          className="flex items-center space-x-2 bg-gray-50 p-2 rounded"
+                        >
+                          <span className="flex-1">{sp.spare_part.name}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={sp.quantity}
+                            onChange={(e) =>
+                              handleSparePartQuantityChange(
+                                sp.spare_part_id,
+                                parseInt(e.target.value)
+                              )
+                            }
+                            className="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleRemoveSparePart(sp.spare_part_id)
+                            }
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
