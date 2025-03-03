@@ -1,0 +1,16 @@
+{
+  "defaultParts": [
+    {
+      "title": "Server Cooling System",
+      "part_number": ["Part002"]
+    },
+    {
+      "title": "Network Switch Repair",
+      "part_number": ["Part001", "Part003"]
+    },
+    {
+      "title": "UPS Battery Replacement",
+      "part_number": ["partno001", "partno002"]
+    }
+  ]
+}
