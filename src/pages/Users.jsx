@@ -1,22 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-interface User {
-  id: string;
-  email: string;
-  full_name: string;
-  role: string;
-  created_at: string;
-}
-
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -43,7 +35,7 @@ export default function UsersPage() {
     }
   }
 
-  async function addUser(event: React.FormEvent) {
+  async function addUser(event) {
     event.preventDefault();
     try {
       const { data, error } = await supabase
@@ -67,7 +59,7 @@ export default function UsersPage() {
     }
   }
 
-  async function deleteUser(userId: string) {
+  async function deleteUser(userId) {
     try {
       const { error } = await supabase.from("users").delete().eq("id", userId);
 
@@ -82,7 +74,7 @@ export default function UsersPage() {
     }
   }
 
-  async function updateUser(event: React.FormEvent) {
+  async function updateUser(event) {
     event.preventDefault();
     if (!editingUser) return;
 

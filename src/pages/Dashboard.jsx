@@ -10,11 +10,9 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 export default function Dashboard() {
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [dateField, setDateField] = useState<"created_at" | "updated_at">(
-    "created_at"
-  );
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [dateField, setDateField] = useState("created_at");
   const [searchTerm, setSearchTerm] = useState("");
 
   const stats = [

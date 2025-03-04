@@ -2,19 +2,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { Package, X } from "lucide-react";
 
-type SparePart = {
-  id: string;
-  name: string;
-  description: string;
-  nsn: string;
-  part_number: string;
-  quantity: number;
-  price: number;
-  created_at: string;
-};
-
 export default function SpareParts() {
-  const [parts, setParts] = useState<SparePart[]>([]);
+  const [parts, setParts] = useState([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newPart, setNewPart] = useState({
@@ -26,7 +15,7 @@ export default function SpareParts() {
     price: 0,
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingPart, setEditingPart] = useState<SparePart | null>(null);
+  const [editingPart, setEditingPart] = useState(null);
 
   useEffect(() => {
     fetchSpareParts();
@@ -46,7 +35,7 @@ export default function SpareParts() {
     setParts(data || []);
   }
 
-  const handleAddPart = async (e: React.FormEvent) => {
+  const handleAddPart = async (e) => {
     e.preventDefault();
 
     const { data, error } = await supabase
@@ -73,7 +62,7 @@ export default function SpareParts() {
     setIsAddModalOpen(false);
   };
 
-  const handleEditPart = async (e: React.FormEvent) => {
+  const handleEditPart = async (e) => {
     e.preventDefault();
     if (!editingPart) return;
 
@@ -252,6 +241,37 @@ export default function SpareParts() {
                     onChange={(e) =>
                       setNewPart({ ...newPart, description: e.target.value })
                     }
+                    rows={3}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    NSN
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newPart.nsn}
+                    onChange={(e) =>
+                      setNewPart({ ...newPart, nsn: e.target.value })
+                    }
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Part Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newPart.part_number}
+                    onChange={(e) =>
+                      setNewPart({ ...newPart, part_number: e.target.value })
+                    }
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
@@ -300,7 +320,7 @@ export default function SpareParts() {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -361,6 +381,7 @@ export default function SpareParts() {
                         description: e.target.value,
                       })
                     }
+                    rows={3}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </div>
@@ -445,7 +466,7 @@ export default function SpareParts() {
                     setIsEditModalOpen(false);
                     setEditingPart(null);
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
@@ -453,7 +474,7 @@ export default function SpareParts() {
                   type="submit"
                   className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                 >
-                  Save Changes
+                  Update Part
                 </button>
               </div>
             </form>

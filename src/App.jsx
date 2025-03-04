@@ -23,28 +23,14 @@ const navigation = [
   { name: "Users", href: "/users", icon: UsersIcon },
 ];
 
-// เพิ่ม interface สำหรับ User type
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
 function App() {
-  // แก้ไข type any เป็น User และกำหนดค่าเริ่มต้นเป็น mock user
-  const [user, setUser] = useState<User>({
-    id: "1",
-    name: "Test User",
-    email: "test@example.com",
-    role: "admin",
-  });
-  const [loading, setLoading] = useState(false); // เปลี่ยนเป็น false เพื่อไม่ต้องรอ loading
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // ปิดการเช็ค user ชั่วคราว
-  useEffect(() => {
-    // checkUser();
-  }, []);
+  const handleMockLogin = (mockUser) => {
+    setUser(mockUser);
+  };
+  useEffect(() => {}, []);
 
   return (
     <BrowserRouter>
@@ -53,7 +39,7 @@ function App() {
           <div className="text-gray-500">Loading...</div>
         </div>
       ) : !user ? (
-        <Login />
+        <Login onLogin={handleMockLogin} />
       ) : (
         <div className="min-h-screen bg-gray-100">
           <Navbar navigation={navigation} />
