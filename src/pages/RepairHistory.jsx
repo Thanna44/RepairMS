@@ -1,23 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { History } from 'lucide-react';
-
-type RepairHistoryItem = {
-  id: string;
-  repair_log_id: string;
-  action: string;
-  notes: string;
-  created_at: string;
-  repair_logs: {
-    title: string;
-  };
-  users: {
-    full_name: string;
-  };
-};
+import React, { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
+import { History } from "lucide-react";
 
 export default function RepairHistory() {
-  const [history, setHistory] = useState<RepairHistoryItem[]>([]);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     fetchRepairHistory();
@@ -25,8 +11,9 @@ export default function RepairHistory() {
 
   async function fetchRepairHistory() {
     const { data, error } = await supabase
-      .from('repair_history')
-      .select(`
+      .from("repair_history")
+      .select(
+        `
         *,
         repair_logs (
           title
@@ -34,11 +21,12 @@ export default function RepairHistory() {
         users (
           full_name
         )
-      `)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching repair history:', error);
+      console.error("Error fetching repair history:", error);
       return;
     }
 
@@ -71,13 +59,15 @@ export default function RepairHistory() {
                   <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
                     <div>
                       <p className="text-sm text-gray-500">
-                        {item.action}{' '}
+                        {item.action}{" "}
                         <span className="font-medium text-gray-900">
                           {item.repair_logs.title}
                         </span>
                       </p>
                       {item.notes && (
-                        <p className="mt-2 text-sm text-gray-500">{item.notes}</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          {item.notes}
+                        </p>
                       )}
                     </div>
                     <div className="whitespace-nowrap text-right text-sm text-gray-500">

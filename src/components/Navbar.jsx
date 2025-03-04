@@ -1,16 +1,8 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Wrench } from 'lucide-react';
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Wrench } from "lucide-react";
 
-interface NavbarProps {
-  navigation: {
-    name: string;
-    href: string;
-    icon: React.ComponentType<any>;
-  }[];
-}
-
-export default function Navbar({ navigation }: NavbarProps) {
+export default function Navbar({ navigation }) {
   const location = useLocation();
 
   return (
@@ -33,8 +25,8 @@ export default function Navbar({ navigation }: NavbarProps) {
                     to={item.href}
                     className={`inline-flex items-center px-1 pt-1 text-sm font-medium ${
                       location.pathname === item.href
-                        ? 'border-b-2 border-indigo-500 text-gray-900'
-                        : 'text-gray-500 hover:border-b-2 hover:border-gray-300 hover:text-gray-700'
+                        ? "border-b-2 border-indigo-500 text-gray-900"
+                        : "text-gray-500 hover:border-b-2 hover:border-gray-300 hover:text-gray-700"
                     }`}
                   >
                     <Icon className="mr-2 h-4 w-4" />

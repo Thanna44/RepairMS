@@ -5,45 +5,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import repairDefaultPartsConfig from "../config/repairDefaultParts.json";
 
-type User = {
-  id: string;
-  full_name: string;
-  role: string;
-};
-
-type RepairLog = {
-  id: string;
-  title: string;
-  description: string;
-  status: "pending" | "in_progress" | "completed";
-  priority: "low" | "medium" | "high";
-  created_at: string;
-  updated_at: string;
-  assigned_user_id: string | null;
-  spare_parts: RepairLogSparePart[];
-};
-
-type SparePart = {
-  id: string;
-  name: string;
-  part_number: string;
-  quantity: number;
-  price: number;
-};
-
-type RepairLogSparePart = {
-  id?: string;
-  spare_part_id: string;
-  quantity: number;
-  spare_part: SparePart;
-};
-
 export default function RepairLogs() {
-  const [logs, setLogs] = useState<RepairLog[]>([]);
+  const [logs, setLogs] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<RepairLog | null>(null);
-  const [users, setUsers] = useState<User[]>([]);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [users, setUsers] = useState([]);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -51,16 +18,12 @@ export default function RepairLogs() {
     priority: "",
     assigned_user_id: "",
   });
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
-  const [dateField, setDateField] = useState<"created_at" | "updated_at">(
-    "created_at"
-  );
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [dateField, setDateField] = useState("created_at");
   const [searchTerm, setSearchTerm] = useState("");
-  const [spareParts, setSpareParts] = useState<SparePart[]>([]);
-  const [selectedSpareParts, setSelectedSpareParts] = useState<
-    RepairLogSparePart[]
-  >([]);
+  const [spareParts, setSpareParts] = useState([]);
+  const [selectedSpareParts, setSelectedSpareParts] = useState([]);
   const [sparePartSearch, setSparePartSearch] = useState("");
 
   useEffect(() => {
@@ -114,7 +77,7 @@ export default function RepairLogs() {
     setSpareParts(data || []);
   }
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
         return "text-red-600 bg-red-100";
@@ -127,7 +90,7 @@ export default function RepairLogs() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status) => {
     switch (status) {
       case "pending":
         return <AlertCircle className="h-5 w-5 text-yellow-500" />;
@@ -140,7 +103,7 @@ export default function RepairLogs() {
     }
   };
 
-  const handleEditClick = (log: RepairLog) => {
+  const handleEditClick = (log) => {
     setSelectedLog(log);
     setEditForm({
       title: log.title,
@@ -153,12 +116,12 @@ export default function RepairLogs() {
     setIsEditModalOpen(true);
   };
 
-  const handleDeleteClick = (log: RepairLog) => {
+  const handleDeleteClick = (log) => {
     setSelectedLog(log);
     setIsDeleteDialogOpen(true);
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
+  const handleEditSubmit = async (e) => {
     e.preventDefault();
     if (!selectedLog) return;
 
@@ -200,7 +163,7 @@ export default function RepairLogs() {
     fetchRepairLogs();
   };
 
-  const handleAddSparePart = (sparePartId: string) => {
+  const handleAddSparePart = (sparePartId) => {
     const sparePart = spareParts.find((sp) => sp.id === sparePartId);
     if (!sparePart) return;
 
@@ -214,10 +177,7 @@ export default function RepairLogs() {
     ]);
   };
 
-  const handleSparePartQuantityChange = (
-    sparePartId: string,
-    quantity: number
-  ) => {
+  const handleSparePartQuantityChange = (sparePartId, quantity) => {
     setSelectedSpareParts(
       selectedSpareParts.map((sp) =>
         sp.spare_part_id === sparePartId ? { ...sp, quantity } : sp
@@ -225,7 +185,7 @@ export default function RepairLogs() {
     );
   };
 
-  const handleRemoveSparePart = (sparePartId: string) => {
+  const handleRemoveSparePart = (sparePartId) => {
     setSelectedSpareParts(
       selectedSpareParts.filter((sp) => sp.spare_part_id !== sparePartId)
     );
@@ -248,38 +208,14 @@ export default function RepairLogs() {
       }));
 
       // Only add parts that aren't already selected
+      const existingPartIds = selectedSpareParts.map((sp) => sp.spare_part_id);
       const partsToAdd = newSpareParts.filter(
-        (newPart) =>
-          !selectedSpareParts.some(
-            (selected) => selected.spare_part_id === newPart.spare_part_id
-          )
+        (part) => !existingPartIds.includes(part.spare_part_id)
       );
 
-      if (partsToAdd.length > 0) {
-        setSelectedSpareParts([...selectedSpareParts, ...partsToAdd]);
-      }
+      setSelectedSpareParts([...selectedSpareParts, ...partsToAdd]);
     }
-  }, [editForm.title, spareParts]);
-
-  const filteredLogs = logs.filter((log) => {
-    const dateToCheck =
-      dateField === "created_at" ? log.created_at : log.updated_at;
-    const logDate = new Date(dateToCheck);
-
-    const isInDateRange =
-      ((!startDate || logDate >= startDate) &&
-        (!endDate || logDate <= endDate)) ||
-      (startDate &&
-        endDate &&
-        logDate.toDateString() === startDate.toDateString());
-
-    const matchesSearch =
-      !searchTerm ||
-      log.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return isInDateRange && matchesSearch;
-  });
+  }, [editForm.title]);
 
   const clearFilters = () => {
     setStartDate(null);
@@ -289,73 +225,70 @@ export default function RepairLogs() {
   };
 
   return (
-    <div>
+    <div className="p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Repair Logs</h1>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-          New Repair Log
+        <button
+          onClick={() =>
+            handleEditClick({
+              title: "",
+              description: "",
+              status: "pending",
+              priority: "low",
+            })
+          }
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+        >
+          Add New Log
         </button>
       </div>
 
-      {/* Search and Filter Controls */}
-      <div className="mb-6 space-y-4">
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Search by Title or Description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-
-          <select
-            className="block w-40 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={dateField}
-            onChange={(e) =>
-              setDateField(e.target.value as "created_at" | "updated_at")
-            }
-          >
-            <option value="created_at">Created Date</option>
-            <option value="updated_at">Updated Date</option>
-          </select>
-
-          <DatePicker
-            selected={startDate}
-            onChange={setStartDate}
-            selectsStart
-            startDate={startDate}
-            endDate={endDate}
-            className="block w-40 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholderText="Start Date"
-          />
-
-          <DatePicker
-            selected={endDate}
-            onChange={setEndDate}
-            selectsEnd
-            startDate={startDate}
-            endDate={endDate}
-            minDate={startDate}
-            maxDate={new Date()}
-            className="block w-40 py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            placeholderText="End Date"
-          />
-
-          <button
-            onClick={clearFilters}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Clear Filters
-          </button>
-        </div>
-      </div>
-
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <div className="p-4 border-b">
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search logs..."
+                  className="w-full pl-10 pr-4 py-2 border rounded-lg"
+                />
+                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <DatePicker
+                selected={startDate}
+                onChange={setStartDate}
+                placeholderText="Start date"
+                className="border rounded-lg p-2"
+              />
+              <DatePicker
+                selected={endDate}
+                onChange={setEndDate}
+                placeholderText="End date"
+                className="border rounded-lg p-2"
+              />
+              <select
+                value={dateField}
+                onChange={(e) => setDateField(e.target.value)}
+                className="border rounded-lg p-2"
+              >
+                <option value="created_at">Created At</option>
+                <option value="updated_at">Updated At</option>
+              </select>
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -370,10 +303,10 @@ export default function RepairLogs() {
                   Priority
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created At
+                  Assigned To
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Updated At
+                  Created At
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -381,7 +314,7 @@ export default function RepairLogs() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredLogs.map((log) => (
+              {logs.map((log) => (
                 <tr key={log.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
@@ -395,8 +328,7 @@ export default function RepairLogs() {
                     <div className="flex items-center">
                       {getStatusIcon(log.status)}
                       <span className="ml-2 text-sm text-gray-900">
-                        {log.status.replace("_", " ").charAt(0).toUpperCase() +
-                          log.status.slice(1)}
+                        {log.status}
                       </span>
                     </div>
                   </td>
@@ -410,12 +342,13 @@ export default function RepairLogs() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(log.created_at).toLocaleDateString()}
+                    {users.find((user) => user.id === log.assigned_user_id)
+                      ?.full_name || "Unassigned"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(log.updated_at).toLocaleDateString()}
+                    {new Date(log.created_at).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
                       onClick={() => handleEditClick(log)}
                       className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -436,11 +369,12 @@ export default function RepairLogs() {
         </div>
       </div>
 
-      {/* Edit Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-semibold mb-4">Edit Repair Log</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
+            <h2 className="text-xl font-semibold mb-4">
+              {selectedLog?.id ? "Edit Repair Log" : "Add New Repair Log"}
+            </h2>
             <form onSubmit={handleEditSubmit}>
               <div className="space-y-4">
                 <div>
@@ -453,7 +387,7 @@ export default function RepairLogs() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, title: e.target.value })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full border rounded-md shadow-sm p-2"
                   />
                 </div>
                 <div>
@@ -466,40 +400,42 @@ export default function RepairLogs() {
                       setEditForm({ ...editForm, description: e.target.value })
                     }
                     rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full border rounded-md shadow-sm p-2"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Status
-                  </label>
-                  <select
-                    value={editForm.status}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, status: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="in_progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Priority
-                  </label>
-                  <select
-                    value={editForm.priority}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, priority: e.target.value })
-                    }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Status
+                    </label>
+                    <select
+                      value={editForm.status}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, status: e.target.value })
+                      }
+                      className="mt-1 block w-full border rounded-md shadow-sm p-2"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Priority
+                    </label>
+                    <select
+                      value={editForm.priority}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, priority: e.target.value })
+                      }
+                      className="mt-1 block w-full border rounded-md shadow-sm p-2"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -513,10 +449,9 @@ export default function RepairLogs() {
                         assigned_user_id: e.target.value,
                       })
                     }
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full border rounded-md shadow-sm p-2"
                   >
-                    <option value="">Not Assigned</option>
-
+                    <option value="">Unassigned</option>
                     {users.map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.full_name}
@@ -524,40 +459,60 @@ export default function RepairLogs() {
                     ))}
                   </select>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Spare Parts
                   </label>
-                  <div className="mt-1 space-y-4">
-                    <div className="flex space-x-2">
-                      <select
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value=""
-                        onChange={(e) => handleAddSparePart(e.target.value)}
-                      >
-                        <option value="">Select a spare part...</option>
-                        {spareParts
-                          .filter(
-                            (sp) =>
-                              !selectedSpareParts.some(
-                                (selected) => selected.spare_part_id === sp.id
-                              )
-                          )
-                          .map((sp) => (
-                            <option key={sp.id} value={sp.id}>
-                              {sp.name} ({sp.part_number})
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      {selectedSpareParts.map((sp) => (
+                  <div className="flex items-center space-x-2 mb-4">
+                    <input
+                      type="text"
+                      value={sparePartSearch}
+                      onChange={(e) => setSparePartSearch(e.target.value)}
+                      placeholder="Search spare parts..."
+                      className="flex-1 border rounded-md shadow-sm p-2"
+                    />
+                  </div>
+                  <div className="max-h-40 overflow-y-auto border rounded-md p-2 mb-4">
+                    {spareParts
+                      .filter((part) =>
+                        part.name
+                          .toLowerCase()
+                          .includes(sparePartSearch.toLowerCase())
+                      )
+                      .map((part) => (
                         <div
-                          key={sp.spare_part_id}
-                          className="flex items-center space-x-2 bg-gray-50 p-2 rounded"
+                          key={part.id}
+                          className="flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleAddSparePart(part.id)}
                         >
-                          <span className="flex-1">{sp.spare_part.name}</span>
+                          <div>
+                            <div className="font-medium">{part.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {part.part_number}
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ${part.price}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="space-y-2">
+                    {selectedSpareParts.map((sp) => (
+                      <div
+                        key={sp.spare_part_id}
+                        className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {sp.spare_part.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {sp.spare_part.part_number}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
                           <input
                             type="number"
                             min="1"
@@ -568,7 +523,7 @@ export default function RepairLogs() {
                                 parseInt(e.target.value)
                               )
                             }
-                            className="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            className="w-20 border rounded p-1"
                           />
                           <button
                             type="button"
@@ -580,8 +535,8 @@ export default function RepairLogs() {
                             Remove
                           </button>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -590,15 +545,15 @@ export default function RepairLogs() {
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                 >
-                  Save Changes
+                  {selectedLog?.id ? "Update" : "Create"}
                 </button>
               </div>
             </form>
@@ -606,25 +561,21 @@ export default function RepairLogs() {
         </div>
       )}
 
-      {/* Delete Confirmation Dialog */}
       {isDeleteDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg">
             <h2 className="text-xl font-semibold mb-4">Confirm Delete</h2>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this repair log? This action
-              cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-3">
+            <p>Are you sure you want to delete this repair log?</p>
+            <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setIsDeleteDialogOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Delete
               </button>
