@@ -12,7 +12,7 @@ function RepairGuide() {
 
   const fetchRepairGuides = async () => {
     try {
-      const { data, error } = await supabase.from("repair_guild").select("*");
+      const { data, error } = await supabase.from("repair_guide").select("*");
 
       if (error) throw error;
       setGuides(data);

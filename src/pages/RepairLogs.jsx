@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { PenTool, AlertCircle, CheckCircle, Search } from "lucide-react";
+import { PenTool, AlertCircle, CheckCircle, Search, X } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import repairDefaultPartsConfig from "../config/repairDefaultParts.json";
@@ -9,11 +9,13 @@ export default function RepairLogs() {
   const [logs, setLogs] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRepairGuideModalOpen, setIsRepairGuideModalOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [selectedGuide, setSelectedGuide] = useState(null);
   const [users, setUsers] = useState([]);
   const [editForm, setEditForm] = useState({
     title: "",
-    description: "",
+    issue: "",
     status: "",
     priority: "",
     assigned_user_id: "",
@@ -107,7 +109,7 @@ export default function RepairLogs() {
     setSelectedLog(log);
     setEditForm({
       title: log.title,
-      description: log.description,
+      issue: log.issue,
       status: log.status,
       priority: log.priority,
       assigned_user_id: log.assigned_user_id || "",
@@ -129,7 +131,7 @@ export default function RepairLogs() {
       .from("repair_logs")
       .update({
         title: editForm.title,
-        description: editForm.description,
+        issue: editForm.issue,
         status: editForm.status,
         priority: editForm.priority,
         assigned_user_id: editForm.assigned_user_id || null,
@@ -224,6 +226,28 @@ export default function RepairLogs() {
     setSearchTerm("");
   };
 
+  const handleRowClick = async (log) => {
+    try {
+      const { data, error } = await supabase
+        .from("repair_guide")
+        .select("*")
+        .eq("device_name", log.title)
+        .eq("issue", log.issue)
+        .single();
+      if (error) {
+        console.error("Error fetching repair guide:", error);
+        return;
+      }
+
+      if (data) {
+        setSelectedGuide(data);
+        setIsRepairGuideModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
@@ -232,7 +256,7 @@ export default function RepairLogs() {
           onClick={() =>
             handleEditClick({
               title: "",
-              description: "",
+              issue: "",
               status: "pending",
               priority: "low",
             })
@@ -315,14 +339,16 @@ export default function RepairLogs() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {logs.map((log) => (
-                <tr key={log.id}>
+                <tr
+                  key={log.id}
+                  className="hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleRowClick(log)}
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {log.title}
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {log.description}
-                    </div>
+                    <div className="text-sm text-gray-500">{log.issue}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -350,13 +376,19 @@ export default function RepairLogs() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => handleEditClick(log)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(log);
+                      }}
                       className="text-indigo-600 hover:text-indigo-900 mr-4"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => handleDeleteClick(log)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(log);
+                      }}
                       className="text-red-600 hover:text-red-900"
                     >
                       Delete
@@ -392,12 +424,12 @@ export default function RepairLogs() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Description
+                    issue
                   </label>
                   <textarea
-                    value={editForm.description}
+                    value={editForm.issue}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, description: e.target.value })
+                      setEditForm({ ...editForm, issue: e.target.value })
                     }
                     rows={3}
                     className="mt-1 block w-full border rounded-md shadow-sm p-2"
@@ -527,9 +559,10 @@ export default function RepairLogs() {
                           />
                           <button
                             type="button"
-                            onClick={() =>
-                              handleRemoveSparePart(sp.spare_part_id)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveSparePart(sp.spare_part_id);
+                            }}
                             className="text-red-600 hover:text-red-900"
                           >
                             Remove
@@ -544,7 +577,10 @@ export default function RepairLogs() {
               <div className="mt-6 flex justify-end space-x-3">
                 <button
                   type="button"
-                  onClick={() => setIsEditModalOpen(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditModalOpen(false);
+                  }}
                   className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
@@ -568,7 +604,10 @@ export default function RepairLogs() {
             <p>Are you sure you want to delete this repair log?</p>
             <div className="mt-6 flex justify-end space-x-3">
               <button
-                onClick={() => setIsDeleteDialogOpen(false)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteDialogOpen(false);
+                }}
                 className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel
@@ -579,6 +618,57 @@ export default function RepairLogs() {
               >
                 Delete
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isRepairGuideModalOpen && selectedGuide && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
+          <div className="bg-white rounded-lg p-6 w-full max-w-3xl m-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold text-blue-600">
+                {selectedGuide.device_name}
+              </h2>
+              <button
+                onClick={() => {
+                  setIsRepairGuideModalOpen(false);
+                  setSelectedGuide(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="text-xl text-red-600 mb-6">
+              Issue: {selectedGuide.issue}
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3">Repair Steps:</h3>
+              <ul className="space-y-2">
+                {selectedGuide.steps.steps.map((step, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="font-medium mr-2">{index + 1}.</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3">Required Parts:</h3>
+              <div className="flex flex-wrap gap-2">
+                {selectedGuide.parts.parts.map((part, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 rounded-full text-blue-600 bg-blue-50 border border-blue-200"
+                  >
+                    {part.name} ({part.quantity})
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
