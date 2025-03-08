@@ -10,6 +10,7 @@ import {
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import RepairLogs from "./pages/RepairLogs";
+import RepairGuide from "./pages/RepairGuide";
 import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
 import UsersPage from "./pages/Users";
@@ -18,6 +19,7 @@ import Login from "./pages/Login";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Settings },
   { name: "Repair Logs", href: "/repair-logs", icon: Tool },
+  { name: "Repair Guide", href: "/repair-guide", icon: Tool },
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
   { name: "Users", href: "/users", icon: UsersIcon },
@@ -48,6 +50,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/repair-logs" element={<RepairLogs />} />
               <Route path="/spare-parts" element={<SpareParts />} />
+              <Route path="/repair-guide" element={<RepairGuide />} />
               <Route path="/history" element={<RepairHistory />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
