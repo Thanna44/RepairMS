@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [role, setRole] = useState("");
@@ -15,21 +16,19 @@ export default function UsersPage() {
   }, []);
 
   async function fetchUsers() {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setUsers(data);
-      }
+      if (error) throw error;
+      setUsers(data || []);
+      setError(null);
     } catch (error) {
       console.error("Error fetching users:", error);
+      setError("Error fetching users data");
     } finally {
       setLoading(false);
     }
@@ -109,7 +108,28 @@ export default function UsersPage() {
   }
 
   if (loading) {
-    return <div>กำลังโหลด...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {error}
+        </div>
+      </div>
+    );
   }
 
   return (

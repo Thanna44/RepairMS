@@ -9,6 +9,8 @@ import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
 
 export default function RepairLogs() {
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRepairGuideModalOpen, setIsRepairGuideModalOpen] = useState(false);
@@ -45,37 +47,42 @@ export default function RepairLogs() {
   }, [users]);
 
   async function fetchRepairLogs() {
-    let query = supabase.from("repair_logs").select("*");
+    setLoading(true);
+    try {
+      let query = supabase.from("repair_logs").select("*");
 
-    // Apply search filter
-    if (searchTerm) {
-      query = query.or(
-        `title.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
-      );
-    }
+      // Apply search filter
+      if (searchTerm) {
+        query = query.or(
+          `title.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
+        );
+      }
 
-    // Apply date filter
-    if (startDate) {
-      query = query.gte(dateField, startDate.toISOString());
-    }
-    if (endDate) {
-      // Add 1 day to include the end date fully
-      const nextDay = new Date(endDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-      query = query.lt(dateField, nextDay.toISOString());
-    }
+      // Apply date filter
+      if (startDate) {
+        query = query.gte(dateField, startDate.toISOString());
+      }
+      if (endDate) {
+        // Add 1 day to include the end date fully
+        const nextDay = new Date(endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        query = query.lt(dateField, nextDay.toISOString());
+      }
 
-    // Order by created date
-    query = query.order("created_at", { ascending: false });
+      // Order by created date
+      query = query.order("created_at", { ascending: false });
 
-    const { data, error } = await query;
+      const { data, error } = await query;
 
-    if (error) {
+      if (error) throw error;
+      setLogs(data || []);
+      setError(null);
+    } catch (error) {
       console.error("Error fetching repair logs:", error);
-      return;
+      setError("Error fetching repair logs data");
+    } finally {
+      setLoading(false);
     }
-
-    setLogs(data || []);
   }
 
   async function fetchUsers() {
@@ -246,6 +253,31 @@ export default function RepairLogs() {
       console.error("Error:", err);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-3xl mx-auto mt-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+        <div className="flex items-center">
+          <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              fillRule="evenodd"
+              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {error}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4">
