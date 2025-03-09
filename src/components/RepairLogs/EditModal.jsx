@@ -19,12 +19,15 @@ export default function EditModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg w-full max-w-2xl">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
+      <div className="bg-white p-6 rounded-lg w-full max-w-2xl m-4">
         <h2 className="text-xl font-semibold mb-4">
           {selectedLog?.id ? "Edit Repair Log" : "Add New Repair Log"}
         </h2>
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          className="max-h-[calc(100vh-200px)] overflow-y-auto"
+        >
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
@@ -129,21 +132,43 @@ export default function EditModal({
                       .toLowerCase()
                       .includes(sparePartSearch.toLowerCase())
                   )
-                  .map((part) => (
-                    <div
-                      key={part.id}
-                      className="flex items-center justify-between p-2 hover:bg-gray-50 cursor-pointer"
-                      onClick={() => handleAddSparePart(part.id)}
-                    >
-                      <div>
-                        <div className="font-medium">{part.name}</div>
-                        <div className="text-sm text-gray-500">
-                          {part.part_number}
+                  .map((part) => {
+                    const isSelected = selectedSpareParts.some(
+                      (sp) => sp.spare_part_id === part.id
+                    );
+                    return (
+                      <div
+                        key={part.id}
+                        className={`flex items-center justify-between p-2 ${
+                          isSelected
+                            ? "bg-gray-100 cursor-not-allowed opacity-60"
+                            : "hover:bg-gray-50 cursor-pointer"
+                        }`}
+                        onClick={() => {
+                          if (!isSelected) {
+                            handleAddSparePart(part.id);
+                          }
+                        }}
+                      >
+                        <div>
+                          <div className="font-medium">{part.name}</div>
+                          <div className="text-sm text-gray-500">
+                            {part.part_number}
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="text-sm text-gray-500 mr-2">
+                            ${part.price}
+                          </div>
+                          {isSelected && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                              Added
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="text-sm text-gray-500">${part.price}</div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
               <div className="space-y-2">
                 {selectedSpareParts.map((sp) => (
@@ -169,10 +194,12 @@ export default function EditModal({
                           )
                         }
                         className="w-20 border rounded p-1"
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <button
                         type="button"
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleRemoveSparePart(sp.spare_part_id);
                         }}
