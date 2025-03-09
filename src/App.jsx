@@ -5,6 +5,7 @@ import {
   PenTool as Tool,
   Package,
   History,
+  BookOpenText,
   Users as UsersIcon,
 } from "lucide-react";
 import Navbar from "./components/Navbar";
@@ -19,7 +20,7 @@ import Login from "./pages/Login";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Settings },
   { name: "Repair Logs", href: "/repair-logs", icon: Tool },
-  { name: "Repair Guide", href: "/repair-guide", icon: Tool },
+  { name: "Repair Guide", href: "/repair-guide", icon: BookOpenText },
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
   { name: "Users", href: "/users", icon: UsersIcon },

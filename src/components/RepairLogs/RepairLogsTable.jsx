@@ -55,6 +55,9 @@ export default function RepairLogsTable({
               Created At
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Updated At
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
             </th>
           </tr>
@@ -96,7 +99,12 @@ export default function RepairLogsTable({
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {new Date(log.created_at).toLocaleDateString()}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {log.updated_at
+                  ? new Date(log.updated_at).toLocaleDateString()
+                  : "-"}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
