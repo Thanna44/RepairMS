@@ -9,7 +9,8 @@ import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
 
 export default function RepairLogs() {
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -33,43 +34,60 @@ export default function RepairLogs() {
   const [sparePartSearch, setSparePartSearch] = useState("");
 
   useEffect(() => {
-    fetchRepairLogs();
+    fetchRepairLogsInitial();
     fetchUsers();
     fetchSpareParts();
   }, []);
 
   useEffect(() => {
-    fetchRepairLogs();
+    if (!initialLoading) {
+      fetchRepairLogs();
+    }
   }, [searchTerm, startDate, endDate, dateField]);
 
   useEffect(() => {
     console.log("Users:", users);
   }, [users]);
 
+  async function fetchRepairLogsInitial() {
+    setInitialLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("repair_logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setLogs(data || []);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching repair logs:", error);
+      setError("Error fetching repair logs data");
+    } finally {
+      setInitialLoading(false);
+    }
+  }
+
   async function fetchRepairLogs() {
     setLoading(true);
     try {
       let query = supabase.from("repair_logs").select("*");
 
-      // Apply search filter
       if (searchTerm) {
         query = query.or(
           `title.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
         );
       }
 
-      // Apply date filter
       if (startDate) {
         query = query.gte(dateField, startDate.toISOString());
       }
       if (endDate) {
-        // Add 1 day to include the end date fully
         const nextDay = new Date(endDate);
         nextDay.setDate(nextDay.getDate() + 1);
         query = query.lt(dateField, nextDay.toISOString());
       }
 
-      // Order by created date
       query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
@@ -254,7 +272,7 @@ export default function RepairLogs() {
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
