@@ -39,12 +39,25 @@ export default function Dashboard() {
   const [statusDistribution, setStatusDistribution] = useState([]);
   const [repairJobs, setRepairJobs] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefetching, setIsRefetching] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchDashboardStats();
-    fetchUsers();
+    const initialFetch = async () => {
+      await Promise.all([fetchDashboardStats(), fetchUsers()]);
+      setIsInitialLoading(false);
+    };
+    initialFetch();
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      setIsRefetching(true);
+      Promise.all([fetchDashboardStats(), fetchUsers()]).finally(() => {
+        setIsRefetching(false);
+      });
+    }
   }, [startDate, endDate, dateField]);
 
   const fetchUsers = async () => {
@@ -59,7 +72,6 @@ export default function Dashboard() {
   };
 
   const fetchDashboardStats = async () => {
-    setLoading(true);
     try {
       // Fetch basic repair stats with more details
       let query = supabase
@@ -72,7 +84,6 @@ export default function Dashboard() {
         query = query.gte(dateField, startDate.toISOString());
       }
       if (endDate) {
-        // Add 1 day to include the end date fully
         const nextDay = new Date(endDate);
         nextDay.setDate(nextDay.getDate() + 1);
         query = query.lt(dateField, nextDay.toISOString());
@@ -129,8 +140,6 @@ export default function Dashboard() {
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       setError("Error fetching dashboard data");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -167,7 +176,13 @@ export default function Dashboard() {
 
   const COLORS = ["#4F46E5", "#22C55E", "#EAB308"];
 
-  if (loading) {
+  const handleClearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setDateField("created_at");
+  };
+
+  if (isInitialLoading) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -200,7 +215,10 @@ export default function Dashboard() {
           <select
             value={dateField}
             onChange={(e) => setDateField(e.target.value)}
-            className="border rounded-lg p-2"
+            className={`border rounded-lg p-2 ${
+              isRefetching ? "opacity-50" : ""
+            }`}
+            disabled={isRefetching}
           >
             <option value="created_at">Created At</option>
             <option value="updated_at">Updated At</option>
@@ -209,14 +227,37 @@ export default function Dashboard() {
             selected={startDate}
             onChange={setStartDate}
             placeholderText="Start date"
-            className="border rounded-lg p-2"
+            className={`border rounded-lg p-2 ${
+              isRefetching ? "opacity-50" : ""
+            }`}
+            disabled={isRefetching}
           />
           <DatePicker
             selected={endDate}
             onChange={setEndDate}
             placeholderText="End date"
-            className="border rounded-lg p-2"
+            className={`border rounded-lg p-2 ${
+              isRefetching ? "opacity-50" : ""
+            }`}
+            disabled={isRefetching}
           />
+          <button
+            onClick={handleClearFilters}
+            disabled={
+              isRefetching ||
+              (!startDate && !endDate && dateField === "created_at")
+            }
+            className={`px-4 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium
+              ${
+                isRefetching ||
+                (!startDate && !endDate && dateField === "created_at")
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+              }
+            `}
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
 
@@ -224,17 +265,15 @@ export default function Dashboard() {
         {stats.map((item) => (
           <div
             key={item.name}
-            className="relative overflow-hidden rounded-lg bg-white px-4 pt-5 pb-12 shadow sm:px-6 sm:pt-6"
+            className="bg-white px-4 pt-5 pb-4 rounded-lg shadow sm:px-6 sm:pt-6"
           >
-            <dt>
-              <div className="absolute rounded-md bg-indigo-500 p-3">
+            <dt className="flex items-center mb-2">
+              <div className="bg-indigo-500 p-3 rounded-md mr-4">
                 <item.icon className="h-6 w-6 text-white" aria-hidden="true" />
               </div>
-              <p className="ml-16 truncate text-sm font-medium text-gray-500">
-                {item.name}
-              </p>
+              <p className="text-sm font-medium text-gray-500">{item.name}</p>
             </dt>
-            <dd className="ml-16 flex items-baseline pb-6 sm:pb-7">
+            <dd className="flex items-center ml-[52px]">
               <p className="text-2xl font-semibold text-gray-900">
                 {item.value}
               </p>
