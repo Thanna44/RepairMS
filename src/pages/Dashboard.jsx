@@ -24,6 +24,16 @@ import {
   Cell,
 } from "recharts";
 
+// Add custom styles for DatePicker z-index
+const datePickerWrapperStyles = `
+  .react-datepicker-wrapper {
+    z-index: 40;
+  }
+  .react-datepicker-popper {
+    z-index: 40 !important;
+  }
+`;
+
 export default function Dashboard() {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -209,9 +219,10 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
+      <style>{datePickerWrapperStyles}</style>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 relative z-40">
           <select
             value={dateField}
             onChange={(e) => setDateField(e.target.value)}
@@ -231,6 +242,7 @@ export default function Dashboard() {
               isRefetching ? "opacity-50" : ""
             }`}
             disabled={isRefetching}
+            popperClassName="z-40"
           />
           <DatePicker
             selected={endDate}
@@ -240,6 +252,7 @@ export default function Dashboard() {
               isRefetching ? "opacity-50" : ""
             }`}
             disabled={isRefetching}
+            popperClassName="z-40"
           />
           <button
             onClick={handleClearFilters}
