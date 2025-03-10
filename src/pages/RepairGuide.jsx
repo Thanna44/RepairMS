@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import AddRepairGuide from "../components/AddRepairGuide";
+import EditRepairGuide from "../components/EditRepairGuide";
 
 function RepairGuide() {
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState(null);
 
   useEffect(() => {
     fetchRepairGuides();
@@ -96,9 +99,32 @@ function RepairGuide() {
           key={guide.id}
           className="bg-white rounded-lg shadow-md mb-6 p-6 border border-gray-200"
         >
-          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-            {guide.device_name}
-          </h2>
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-2xl font-semibold text-blue-600">
+              {guide.device_name}
+            </h2>
+            <button
+              onClick={() => {
+                setSelectedGuide(guide);
+                setShowEditModal(true);
+              }}
+              className="text-gray-600 hover:text-blue-600 flex items-center"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+          </div>
 
           <div className="text-xl text-red-600 mb-6">Issue: {guide.issue}</div>
 
@@ -135,6 +161,22 @@ function RepairGuide() {
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             fetchRepairGuides();
+            setShowAddModal(false);
+          }}
+        />
+      )}
+
+      {showEditModal && selectedGuide && (
+        <EditRepairGuide
+          guide={selectedGuide}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedGuide(null);
+          }}
+          onSuccess={() => {
+            fetchRepairGuides();
+            setShowEditModal(false);
+            setSelectedGuide(null);
           }}
         />
       )}

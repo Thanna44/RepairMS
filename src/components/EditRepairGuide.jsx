@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-function AddRepairGuide({ onClose, onSuccess }) {
+function EditRepairGuide({ onClose, onSuccess, guide }) {
   const [formData, setFormData] = useState({
-    device_name: "",
-    issue: "",
-    steps: [""],
-    parts: [{ name: "", quantity: "" }],
+    device_name: guide.device_name,
+    issue: guide.issue,
+    steps: guide.steps.steps,
+    parts: guide.parts.parts,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,7 +28,8 @@ function AddRepairGuide({ onClose, onSuccess }) {
 
       const { data, error } = await supabase
         .from("repair_guide")
-        .insert([formattedData]);
+        .update(formattedData)
+        .eq("id", guide.id);
 
       if (error) throw error;
 
@@ -91,7 +92,7 @@ function AddRepairGuide({ onClose, onSuccess }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Add New Repair Guide</h2>
+          <h2 className="text-2xl font-bold">Edit Repair Guide</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -255,6 +256,7 @@ function AddRepairGuide({ onClose, onSuccess }) {
                 />
                 <input
                   type="number"
+                  min="1"
                   value={part.quantity}
                   onChange={(e) =>
                     updatePart(index, "quantity", e.target.value)
@@ -300,7 +302,7 @@ function AddRepairGuide({ onClose, onSuccess }) {
               disabled={loading}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
             >
-              {loading ? "Saving..." : "Save Guide"}
+              {loading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>
@@ -309,4 +311,4 @@ function AddRepairGuide({ onClose, onSuccess }) {
   );
 }
 
-export default AddRepairGuide;
+export default EditRepairGuide;
