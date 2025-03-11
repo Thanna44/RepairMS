@@ -4,8 +4,8 @@ import { Wrench, Mail, Lock, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export default function Login({ onLogin }) {
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -26,23 +26,30 @@ export default function Login({ onLogin }) {
       }
 
       if (data?.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
+        const { data: userData, error: userError } = await supabase
+          .from("users")
           .select("*")
           .eq("id", data.user.id)
           .single();
 
+        if (userError) throw userError;
+
         const user = {
           id: data.user.id,
           email: data.user.email,
-          ...profileData,
+          ...userData,
         };
 
         onLogin(user);
         navigate("/");
       }
     } catch (error) {
-      setError(error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      console.error("Login error:", error);
+      if (error.message?.includes("Invalid login credentials")) {
+        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      } else {
+        setError(error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      }
     } finally {
       setIsLoading(false);
     }

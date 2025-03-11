@@ -9,47 +9,110 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess(false);
+    setIsLoading(true);
+
+    console.log("Starting registration process...");
 
     // Validate password match
     if (password !== confirmPassword) {
       setError("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      // Sign up with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      console.log("Attempting to create auth user...");
+      const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
 
-      if (error) throw error;
+      if (authError) {
+        console.error("Auth error:", authError);
+        throw authError;
+      }
 
-      if (data?.user) {
-        // Create profile record
-        const { error: profileError } = await supabase.from("profiles").insert([
-          {
-            id: data.user.id,
-            full_name: fullName,
+      console.log("Auth response:", authData);
+
+      if (!authData?.user?.id) {
+        throw new Error("ไม่สามารถสร้างบัญชีผู้ใช้ได้");
+      }
+
+      console.log("Creating user record for:", authData.user.id);
+
+      // Create user record
+      const { error: userError } = await supabase.from("users").insert([
+        {
+          id: authData.user.id,
+          email: email,
+          full_name: fullName,
+          role: "technician",
+          created_at: new Date().toISOString(),
+        },
+      ]);
+
+      if (userError) {
+        console.error("User record creation error:", userError);
+        // Try to cleanup the auth user if user record creation fails
+        try {
+          await supabase.auth.admin.deleteUser(authData.user.id);
+        } catch (deleteError) {
+          console.error("Failed to cleanup auth user:", deleteError);
+        }
+        throw userError;
+      }
+
+      console.log("Registration successful!");
+
+      // Show success state
+      setSuccess(true);
+      setError("");
+
+      // Clear form
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setFullName("");
+
+      // Redirect after success message
+      setTimeout(() => {
+        console.log("Redirecting to login...");
+        navigate("/login", {
+          state: {
+            message: "ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ",
             email: email,
           },
-        ]);
-
-        if (profileError) throw profileError;
-
-        // Redirect to login page with success message
-        navigate("/login");
-      }
+        });
+      }, 2000);
     } catch (error) {
-      setError(error.message || "เกิดข้อผิดพลาดในการลงทะเบียน");
+      console.error("Registration error:", error);
+
+      if (error.message?.includes("Email rate limit exceeded")) {
+        setError("กรุณารอสักครู่แล้วลองใหม่อีกครั้ง");
+      } else if (error.message?.includes("User already registered")) {
+        setError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น");
+      } else if (error.message?.includes("duplicate key")) {
+        setError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น");
+      } else {
+        setError(
+          `เกิดข้อผิดพลาดในการลงทะเบียน: ${
+            error.message || "กรุณาลองใหม่อีกครั้ง"
+          }`
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,6 +145,21 @@ export default function Signup() {
                   </div>
                   <div className="ml-3">
                     <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="rounded-md bg-green-50 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <AlertCircle className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-green-700">
+                      ลงทะเบียนสำเร็จ! กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...
+                    </p>
                   </div>
                 </div>
               </div>
@@ -180,9 +258,9 @@ export default function Signup() {
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || success}
                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  isLoading || success ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
                 {isLoading ? "กำลังลงทะเบียน..." : "ลงทะเบียน"}
