@@ -1,9 +1,22 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Wrench } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Wrench, LogOut } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
-export default function Navbar({ navigation }) {
+export default function Navbar({ navigation, onLogout }) {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      onLogout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Error logging out:", error.message);
+    }
+  };
 
   return (
     <nav className="fixed w-full bg-white shadow-lg z-50">
@@ -35,6 +48,15 @@ export default function Navbar({ navigation }) {
                 );
               })}
             </div>
+          </div>
+          <div className="flex items-center">
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              ออกจากระบบ
+            </button>
           </div>
         </div>
       </div>

@@ -34,6 +34,11 @@ function App() {
   const handleMockLogin = (mockUser) => {
     setUser(mockUser);
   };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   useEffect(() => {}, []);
 
   return (
@@ -50,7 +55,7 @@ function App() {
         </Routes>
       ) : (
         <div className="min-h-screen bg-gray-100">
-          <Navbar navigation={navigation} />
+          <Navbar navigation={navigation} onLogout={handleLogout} />
           <main className="p-8 pt-24">
             <Routes>
               <Route path="/" element={<Dashboard />} />
