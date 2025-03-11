@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Wrench, Mail, Lock, AlertCircle } from "lucide-react";
+import { Wrench, Mail, Lock, AlertCircle, User } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
-export default function Login({ onLogin }) {
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("password");
+export default function Signup() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -13,36 +15,41 @@ export default function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    // Validate password match
+    if (password !== confirmPassword) {
+      setError("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Sign up with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       if (data?.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", data.user.id)
-          .single();
+        // Create profile record
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            id: data.user.id,
+            full_name: fullName,
+            email: email,
+          },
+        ]);
 
-        const user = {
-          id: data.user.id,
-          email: data.user.email,
-          ...profileData,
-        };
+        if (profileError) throw profileError;
 
-        onLogin(user);
-        navigate("/");
+        // Redirect to login page with success message
+        navigate("/login");
       }
     } catch (error) {
-      setError(error.message || "เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      setError(error.message || "เกิดข้อผิดพลาดในการลงทะเบียน");
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +64,7 @@ export default function Login({ onLogin }) {
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          RepairMS
+          ลงทะเบียนใช้งานระบบ
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Repair Management System
@@ -79,6 +86,29 @@ export default function Login({ onLogin }) {
                 </div>
               </div>
             )}
+
+            <div>
+              <label
+                htmlFor="fullName"
+                className="block text-sm font-medium text-gray-700"
+              >
+                ชื่อ-นามสกุล
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="fullName"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="pl-10 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="ชื่อ นามสกุล"
+                />
+              </div>
+            </div>
 
             <div>
               <label
@@ -126,6 +156,28 @@ export default function Login({ onLogin }) {
             </div>
 
             <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
+                ยืนยันรหัสผ่าน
+              </label>
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+            </div>
+
+            <div>
               <button
                 type="submit"
                 disabled={isLoading}
@@ -133,16 +185,16 @@ export default function Login({ onLogin }) {
                   isLoading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
-                {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
+                {isLoading ? "กำลังลงทะเบียน..." : "ลงทะเบียน"}
               </button>
             </div>
 
             <div className="text-sm text-center">
               <Link
-                to="/signup"
+                to="/login"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                ยังไม่มีบัญชี? ลงทะเบียนใช้งาน
+                มีบัญชีอยู่แล้ว? เข้าสู่ระบบ
               </Link>
             </div>
           </form>

@@ -16,6 +16,7 @@ import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
 import UsersPage from "./pages/Users";
 import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Settings },
@@ -42,7 +43,11 @@ function App() {
           <div className="text-gray-500">Loading...</div>
         </div>
       ) : !user ? (
-        <Login onLogin={handleMockLogin} />
+        <Routes>
+          <Route path="/login" element={<Login onLogin={handleMockLogin} />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       ) : (
         <div className="min-h-screen bg-gray-100">
           <Navbar navigation={navigation} />
