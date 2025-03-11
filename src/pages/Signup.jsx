@@ -17,20 +17,18 @@ export default function Signup() {
     e.preventDefault();
     setError("");
     setSuccess(false);
-    setIsLoading(true);
-
-    console.log("Starting registration process...");
 
     // Validate password match
     if (password !== confirmPassword) {
       setError("รหัสผ่านไม่ตรงกัน กรุณาตรวจสอบอีกครั้ง");
-      setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      console.log("Attempting to create auth user...");
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      // Sign up with Supabase without email confirmation
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -40,78 +38,51 @@ export default function Signup() {
         },
       });
 
-      if (authError) {
-        console.error("Auth error:", authError);
-        throw authError;
-      }
+      if (error) throw error;
 
-      console.log("Auth response:", authData);
-
-      if (!authData?.user?.id) {
-        throw new Error("ไม่สามารถสร้างบัญชีผู้ใช้ได้");
-      }
-
-      console.log("Creating user record for:", authData.user.id);
-
-      // Create user record
-      const { error: userError } = await supabase.from("users").insert([
-        {
-          id: authData.user.id,
-          email: email,
-          full_name: fullName,
-          role: "technician",
-          created_at: new Date().toISOString(),
-        },
-      ]);
-
-      if (userError) {
-        console.error("User record creation error:", userError);
-        // Try to cleanup the auth user if user record creation fails
+      if (data?.user) {
         try {
-          await supabase.auth.admin.deleteUser(authData.user.id);
-        } catch (deleteError) {
-          console.error("Failed to cleanup auth user:", deleteError);
+          // Create profile record
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: data.user.id,
+                full_name: fullName,
+                email: email,
+              },
+            ]);
+
+          if (profileError) throw profileError;
+
+          // Show success message
+          setSuccess(true);
+          setError("");
+
+          // Clear form
+          setEmail("");
+          setPassword("");
+          setConfirmPassword("");
+          setFullName("");
+
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
+        } catch (profileError) {
+          // If profile creation fails, delete the auth user
+          await supabase.auth.admin.deleteUser(data.user.id);
+          throw profileError;
         }
-        throw userError;
       }
-
-      console.log("Registration successful!");
-
-      // Show success state
-      setSuccess(true);
-      setError("");
-
-      // Clear form
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-      setFullName("");
-
-      // Redirect after success message
-      setTimeout(() => {
-        console.log("Redirecting to login...");
-        navigate("/login", {
-          state: {
-            message: "ลงทะเบียนสำเร็จ กรุณาเข้าสู่ระบบ",
-            email: email,
-          },
-        });
-      }, 2000);
     } catch (error) {
-      console.error("Registration error:", error);
-
-      if (error.message?.includes("Email rate limit exceeded")) {
+      console.error("Signup error:", error);
+      if (error.message.includes("Email rate limit exceeded")) {
         setError("กรุณารอสักครู่แล้วลองใหม่อีกครั้ง");
-      } else if (error.message?.includes("User already registered")) {
-        setError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น");
-      } else if (error.message?.includes("duplicate key")) {
+      } else if (error.message.includes("User already registered")) {
         setError("อีเมลนี้ถูกใช้งานแล้ว กรุณาใช้อีเมลอื่น");
       } else {
-        setError(
-          `เกิดข้อผิดพลาดในการลงทะเบียน: ${
-            error.message || "กรุณาลองใหม่อีกครั้ง"
-          }`
-        );
+        setError("เกิดข้อผิดพลาดในการลงทะเบียน กรุณาลองใหม่อีกครั้ง");
       }
     } finally {
       setIsLoading(false);
@@ -153,12 +124,9 @@ export default function Signup() {
             {success && (
               <div className="rounded-md bg-green-50 p-4">
                 <div className="flex">
-                  <div className="flex-shrink-0">
-                    <AlertCircle className="h-5 w-5 text-green-400" />
-                  </div>
                   <div className="ml-3">
                     <p className="text-sm text-green-700">
-                      ลงทะเบียนสำเร็จ! กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...
+                      ลงทะเบียนสำเร็จ กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...
                     </p>
                   </div>
                 </div>
