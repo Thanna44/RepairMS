@@ -85,7 +85,7 @@ export default function Dashboard() {
     try {
       // Fetch basic repair stats with more details
       let query = supabase
-        .from("repair_logs")
+        .from("repair_tasks")
         .select("*")
         .order("created_at", { ascending: false });
 

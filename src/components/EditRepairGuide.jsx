@@ -27,7 +27,7 @@ function EditRepairGuide({ onClose, onSuccess, guide }) {
       };
 
       const { data, error } = await supabase
-        .from("repair_guide")
+        .from("repair_manuals")
         .update(formattedData)
         .eq("id", guide.id);
 

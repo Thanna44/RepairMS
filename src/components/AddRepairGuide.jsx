@@ -27,7 +27,7 @@ function AddRepairGuide({ onClose, onSuccess }) {
       };
 
       const { data, error } = await supabase
-        .from("repair_guide")
+        .from("repair_manuals")
         .insert([formattedData]);
 
       if (error) throw error;

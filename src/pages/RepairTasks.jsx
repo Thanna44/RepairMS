@@ -49,73 +49,29 @@ export default function RepairLogs() {
     console.log("Users:", users);
   }, [users]);
 
-  useEffect(() => {
-    console.log("Current logs state:", logs);
-    console.log("Current users state:", users);
-  }, [logs, users]);
-
   async function fetchRepairLogsInitial() {
     setInitialLoading(true);
     try {
-      console.log("Fetching initial repair logs...");
-      console.log("Supabase instance:", supabase);
-
-      const query = supabase
-        .from("repiar_logs")
+      const { data, error } = await supabase
+        .from("repair_tasks")
         .select("*")
         .order("created_at", { ascending: false });
 
-      console.log("Query object:", query);
-      console.log("Executing query...");
-
-      const { data, error } = await query;
-      console.log("Query executed");
-
-      if (error) {
-        console.error("Supabase error:", error);
-        console.error("Error details:", {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-        });
-        throw error;
-      }
-
-      if (data === null) {
-        console.log("Data is null - might be a connection issue");
-      } else if (data.length === 0) {
-        console.log("Data array is empty - no records found");
-      } else {
-        console.log("Data retrieved successfully");
-      }
-
-      console.log("Initial Repair Logs Data:", data);
-      console.log("Number of repair logs:", data?.length || 0);
+      if (error) throw error;
       setLogs(data || []);
       setError(null);
     } catch (error) {
       console.error("Error fetching repair logs:", error);
-      console.error("Full error object:", error);
       setError("Error fetching repair logs data");
     } finally {
       setInitialLoading(false);
-      console.log("Initial loading completed");
     }
   }
 
   async function fetchRepairLogs() {
     setLoading(true);
     try {
-      console.log("Fetching filtered repair logs...");
-      console.log("Current filters:", {
-        searchTerm,
-        startDate,
-        endDate,
-        dateField,
-      });
-
-      let query = supabase.from("repiar_logs").select("*");
+      let query = supabase.from("repair_tasks").select("*");
 
       if (searchTerm) {
         query = query.or(
@@ -136,12 +92,7 @@ export default function RepairLogs() {
 
       const { data, error } = await query;
 
-      if (error) {
-        console.error("Supabase query error:", error);
-        throw error;
-      }
-      console.log("Filtered Repair Logs Data:", data);
-      console.log("Number of filtered repair logs:", data?.length || 0);
+      if (error) throw error;
       setLogs(data || []);
       setError(null);
     } catch (error) {
@@ -149,7 +100,6 @@ export default function RepairLogs() {
       setError("Error fetching repair logs data");
     } finally {
       setLoading(false);
-      console.log("Filtered loading completed");
     }
   }
 
@@ -162,7 +112,6 @@ export default function RepairLogs() {
       }
 
       if (data) {
-        console.log("Users Data:", data);
         setUsers(data);
       }
     } catch (error) {
@@ -178,7 +127,6 @@ export default function RepairLogs() {
       return;
     }
 
-    console.log("Spare Parts Data:", data);
     setSpareParts(data || []);
   }
 
@@ -202,34 +150,56 @@ export default function RepairLogs() {
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedLog) return;
 
-    const { error: updateError } = await supabase
-      .from("repiar_logs")
-      .update({
-        title: editForm.title,
-        issue: editForm.issue,
-        status: editForm.status,
-        priority: editForm.priority,
-        assigned_user_id: editForm.assigned_user_id || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", selectedLog.id);
+    const formData = {
+      title: editForm.title,
+      issue: editForm.issue,
+      status: editForm.status,
+      priority: editForm.priority,
+      assigned_user_id: editForm.assigned_user_id || null,
+      updated_at: new Date().toISOString(),
+    };
 
-    if (updateError) {
-      console.error("Error updating repair log:", updateError);
-      return;
+    try {
+      let error;
+
+      if (selectedLog?.id) {
+        // Update existing log
+        const { error: updateError } = await supabase
+          .from("repair_tasks")
+          .update(formData)
+          .eq("id", selectedLog.id);
+        error = updateError;
+      } else {
+        // Insert new log
+        const { error: insertError } = await supabase
+          .from("repair_tasks")
+          .insert({
+            ...formData,
+            created_at: new Date().toISOString(),
+            spare_parts:
+              selectedSpareParts.length > 0 ? selectedSpareParts : null,
+          });
+        error = insertError;
+      }
+
+      if (error) {
+        console.error("Error saving repair log:", error);
+        return;
+      }
+
+      setIsEditModalOpen(false);
+      fetchRepairLogs();
+    } catch (err) {
+      console.error("Error in handleEditSubmit:", err);
     }
-
-    setIsEditModalOpen(false);
-    fetchRepairLogs();
   };
 
   const handleDelete = async () => {
     if (!selectedLog) return;
 
     const { error } = await supabase
-      .from("repiar_logs")
+      .from("repair_tasks")
       .delete()
       .eq("id", selectedLog.id);
 
@@ -352,7 +322,7 @@ export default function RepairLogs() {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Repair Logs</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Repair Tasks</h1>
         <button
           onClick={() =>
             handleEditClick({

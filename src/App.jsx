@@ -10,8 +10,8 @@ import {
 } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
-import RepairLogs from "./pages/RepairLogs";
-import RepairGuide from "./pages/RepairGuide";
+import RepairLogs from "./pages/RepairTasks";
+import RepairGuide from "./pages/RepairManuals";
 import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
 import UsersPage from "./pages/Users";
@@ -20,7 +20,7 @@ import Signup from "./pages/Signup";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Settings },
-  { name: "Repair Logs", href: "/repair-logs", icon: Tool },
+  { name: "Repair Tasks", href: "/repair-tasks", icon: Tool },
   { name: "Repair Guide", href: "/repair-guide", icon: BookOpenText },
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
@@ -59,7 +59,7 @@ function App() {
           <main className="p-8 pt-24">
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/repair-logs" element={<RepairLogs />} />
+              <Route path="/repair-tasks" element={<RepairLogs />} />
               <Route path="/spare-parts" element={<SpareParts />} />
               <Route path="/repair-guide" element={<RepairGuide />} />
               <Route path="/history" element={<RepairHistory />} />
