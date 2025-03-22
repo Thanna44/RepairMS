@@ -6,6 +6,7 @@ import EditModal from "../components/RepairLogs/EditModal";
 import DeleteModal from "../components/RepairLogs/DeleteModal";
 import RepairGuideModal from "../components/RepairLogs/RepairGuideModal";
 import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function RepairLogs() {
   const [logs, setLogs] = useState([]);
@@ -209,6 +210,7 @@ export default function RepairLogs() {
 
         if (fetchError) {
           console.error("Error fetching existing log:", fetchError);
+          toast.error("Error fetching repair log data");
           return;
         }
 
@@ -280,6 +282,7 @@ export default function RepairLogs() {
 
           if (stockFetchError) {
             console.error("Error fetching current stock:", stockFetchError);
+            toast.error(`Error fetching stock for part: ${adjustment.name}`);
             continue;
           }
 
@@ -295,6 +298,7 @@ export default function RepairLogs() {
 
           if (stockError) {
             console.error("Error updating stock:", stockError);
+            toast.error(`Error updating stock for part: ${adjustment.name}`);
           }
         }
       } else {
@@ -318,6 +322,7 @@ export default function RepairLogs() {
 
           if (fetchError) {
             console.error("Error fetching current stock:", fetchError);
+            toast.error(`Error fetching stock for part: ${sp.spare_part.name}`);
             continue;
           }
 
@@ -331,38 +336,53 @@ export default function RepairLogs() {
 
           if (stockError) {
             console.error("Error updating stock:", stockError);
+            toast.error(`Error updating stock for part: ${sp.spare_part.name}`);
           }
         }
       }
 
       if (error) {
         console.error("Error saving repair log:", error);
+        toast.error("Error saving repair log");
         return;
       }
 
+      toast.success(
+        selectedLog?.id
+          ? "Repair log updated successfully"
+          : "New repair log created successfully"
+      );
       setIsEditModalOpen(false);
       fetchRepairLogs();
       fetchSpareParts(); // Refresh spare parts list to show updated quantities
     } catch (err) {
       console.error("Error in handleEditSubmit:", err);
+      toast.error("An unexpected error occurred");
     }
   };
 
   const handleDelete = async () => {
     if (!selectedLog) return;
 
-    const { error } = await supabase
-      .from("repair_tasks")
-      .delete()
-      .eq("id", selectedLog.id);
+    try {
+      const { error } = await supabase
+        .from("repair_tasks")
+        .delete()
+        .eq("id", selectedLog.id);
 
-    if (error) {
-      console.error("Error deleting repair log:", error);
-      return;
+      if (error) {
+        console.error("Error deleting repair log:", error);
+        toast.error("Error deleting repair log");
+        return;
+      }
+
+      toast.success("Repair log deleted successfully");
+      setIsDeleteDialogOpen(false);
+      fetchRepairLogs();
+    } catch (err) {
+      console.error("Error in handleDelete:", err);
+      toast.error("An unexpected error occurred");
     }
-
-    setIsDeleteDialogOpen(false);
-    fetchRepairLogs();
   };
 
   const handleAddSparePart = (sparePartId) => {
@@ -474,6 +494,7 @@ export default function RepairLogs() {
 
   return (
     <div className="p-4">
+      <Toaster position="top-right" />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Repair Tasks</h1>
         <button
