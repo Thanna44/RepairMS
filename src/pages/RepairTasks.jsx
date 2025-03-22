@@ -365,20 +365,69 @@ export default function RepairLogs() {
     if (!selectedLog) return;
 
     try {
-      const { error } = await supabase
+      // First, get the repair task's spare parts before deletion
+      const { data: taskData, error: fetchError } = await supabase
+        .from("repair_tasks")
+        .select("spare_parts")
+        .eq("id", selectedLog.id)
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching repair task data:", fetchError);
+        toast.error("Error fetching repair task data");
+        return;
+      }
+
+      // Delete the repair task
+      const { error: deleteError } = await supabase
         .from("repair_tasks")
         .delete()
         .eq("id", selectedLog.id);
 
-      if (error) {
-        console.error("Error deleting repair log:", error);
+      if (deleteError) {
+        console.error("Error deleting repair log:", deleteError);
         toast.error("Error deleting repair log");
         return;
+      }
+
+      // If the task had spare parts, restore them to stock
+      if (taskData?.spare_parts && taskData.spare_parts.length > 0) {
+        for (const part of taskData.spare_parts) {
+          // Get current stock quantity
+          const { data: currentStock, error: stockFetchError } = await supabase
+            .from("spare_parts")
+            .select("quantity")
+            .eq("name", part.name)
+            .eq("part_number", part.part_number)
+            .single();
+
+          if (stockFetchError) {
+            console.error("Error fetching current stock:", stockFetchError);
+            toast.error(`Error fetching stock for part: ${part.name}`);
+            continue;
+          }
+
+          // Calculate new quantity (return the used quantity back to stock)
+          const newQuantity = currentStock.quantity + part.quantity;
+
+          // Update stock
+          const { error: stockUpdateError } = await supabase
+            .from("spare_parts")
+            .update({ quantity: newQuantity })
+            .eq("name", part.name)
+            .eq("part_number", part.part_number);
+
+          if (stockUpdateError) {
+            console.error("Error updating stock:", stockUpdateError);
+            toast.error(`Error updating stock for part: ${part.name}`);
+          }
+        }
       }
 
       toast.success("Repair log deleted successfully");
       setIsDeleteDialogOpen(false);
       fetchRepairLogs();
+      fetchSpareParts(); // Refresh spare parts list to show updated quantities
     } catch (err) {
       console.error("Error in handleDelete:", err);
       toast.error("An unexpected error occurred");
