@@ -139,7 +139,31 @@ export default function RepairLogs() {
       priority: log.priority,
       assigned_user_id: log.assigned_user_id || "",
     });
-    setSelectedSpareParts(log.spare_parts || []);
+
+    // Load saved spare parts if they exist
+    if (log.spare_parts) {
+      const savedSpareParts = log.spare_parts.map((sp) => {
+        const sparePart = spareParts.find(
+          (part) => part.name === sp.name && part.part_number === sp.part_number
+        );
+
+        return {
+          spare_part_id: sparePart?.id,
+          quantity: sp.quantity,
+          spare_part: {
+            id: sparePart?.id,
+            name: sp.name,
+            nsn: sp.nsn,
+            part_number: sp.part_number,
+            price: sp.price,
+          },
+        };
+      });
+      setSelectedSpareParts(savedSpareParts);
+    } else {
+      setSelectedSpareParts([]);
+    }
+
     setIsEditModalOpen(true);
   };
 
@@ -163,13 +187,116 @@ export default function RepairLogs() {
     try {
       let error;
 
+      // Format spare parts data for saving
+      const formattedSpareParts = selectedSpareParts.map((sp) => ({
+        name: sp.spare_part.name,
+        nsn: sp.spare_part.nsn,
+        part_number: sp.spare_part.part_number,
+        quantity: sp.quantity,
+        price: sp.spare_part.price,
+      }));
+
+      // Add spare parts to form data
+      formData.spare_parts = formattedSpareParts;
+
       if (selectedLog?.id) {
+        // Get existing spare parts data for comparison
+        const { data: existingLog, error: fetchError } = await supabase
+          .from("repair_tasks")
+          .select("spare_parts")
+          .eq("id", selectedLog.id)
+          .single();
+
+        if (fetchError) {
+          console.error("Error fetching existing log:", fetchError);
+          return;
+        }
+
+        const existingParts = existingLog.spare_parts || [];
+
+        // Calculate stock adjustments
+        const stockAdjustments = [];
+
+        // Check for quantity changes in existing parts
+        existingParts.forEach((oldPart) => {
+          const newPart = formattedSpareParts.find(
+            (p) =>
+              p.name === oldPart.name && p.part_number === oldPart.part_number
+          );
+
+          if (newPart) {
+            // If quantity changed, we need to adjust stock
+            if (newPart.quantity !== oldPart.quantity) {
+              stockAdjustments.push({
+                name: oldPart.name,
+                part_number: oldPart.part_number,
+                // Positive means we return to stock, negative means we take from stock
+                adjustment: oldPart.quantity - newPart.quantity,
+              });
+            }
+          } else {
+            // Part was removed, return stock
+            stockAdjustments.push({
+              name: oldPart.name,
+              part_number: oldPart.part_number,
+              adjustment: oldPart.quantity, // Return full quantity to stock
+            });
+          }
+        });
+
+        // Check for new parts added
+        formattedSpareParts.forEach((newPart) => {
+          const oldPart = existingParts.find(
+            (p) =>
+              p.name === newPart.name && p.part_number === newPart.part_number
+          );
+
+          if (!oldPart) {
+            // New part added, need to reduce stock
+            stockAdjustments.push({
+              name: newPart.name,
+              part_number: newPart.part_number,
+              adjustment: -newPart.quantity, // Negative because we're reducing stock
+            });
+          }
+        });
+
         // Update existing log
         const { error: updateError } = await supabase
           .from("repair_tasks")
           .update(formData)
           .eq("id", selectedLog.id);
         error = updateError;
+
+        // Apply stock adjustments
+        for (const adjustment of stockAdjustments) {
+          // Get current stock
+          const { data: currentStock, error: stockFetchError } = await supabase
+            .from("spare_parts")
+            .select("quantity")
+            .eq("name", adjustment.name)
+            .eq("part_number", adjustment.part_number)
+            .single();
+
+          if (stockFetchError) {
+            console.error("Error fetching current stock:", stockFetchError);
+            continue;
+          }
+
+          // Calculate new quantity (add adjustment - positive adds to stock, negative reduces)
+          const newQuantity = currentStock.quantity + adjustment.adjustment;
+
+          // Update stock
+          const { error: stockError } = await supabase
+            .from("spare_parts")
+            .update({ quantity: newQuantity })
+            .eq("name", adjustment.name)
+            .eq("part_number", adjustment.part_number);
+
+          if (stockError) {
+            console.error("Error updating stock:", stockError);
+          }
+        }
       } else {
         // Insert new log
         const { error: insertError } = await supabase
@@ -177,10 +304,35 @@ export default function RepairLogs() {
           .insert({
             ...formData,
             created_at: new Date().toISOString(),
-            spare_parts:
-              selectedSpareParts.length > 0 ? selectedSpareParts : null,
           });
         error = insertError;
+
+        // For new logs, reduce stock for all parts
+        for (const sp of selectedSpareParts) {
+          const { data: currentStock, error: fetchError } = await supabase
+            .from("spare_parts")
+            .select("quantity")
+            .eq("name", sp.spare_part.name)
+            .eq("part_number", sp.spare_part.part_number)
+            .single();
+
+          if (fetchError) {
+            console.error("Error fetching current stock:", fetchError);
+            continue;
+          }
+
+          const newQuantity = currentStock.quantity - sp.quantity;
+
+          const { error: stockError } = await supabase
+            .from("spare_parts")
+            .update({ quantity: newQuantity })
+            .eq("name", sp.spare_part.name)
+            .eq("part_number", sp.spare_part.part_number);
+
+          if (stockError) {
+            console.error("Error updating stock:", stockError);
+          }
+        }
       }
 
       if (error) {
@@ -190,6 +342,7 @@ export default function RepairLogs() {
 
       setIsEditModalOpen(false);
       fetchRepairLogs();
+      fetchSpareParts(); // Refresh spare parts list to show updated quantities
     } catch (err) {
       console.error("Error in handleEditSubmit:", err);
     }
