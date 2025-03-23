@@ -11,7 +11,7 @@ import {
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import RepairLogs from "./pages/RepairTasks";
-import RepairGuide from "./pages/RepairManuals";
+import RepairManuals from "./pages/RepairManuals";
 import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
 import UsersPage from "./pages/Users";
@@ -21,7 +21,7 @@ import Signup from "./pages/Signup";
 const navigation = [
   { name: "Dashboard", href: "/", icon: Settings },
   { name: "Repair Tasks", href: "/repair-tasks", icon: Tool },
-  { name: "Repair Guide", href: "/repair-guide", icon: BookOpenText },
+  { name: "Repair Manuals", href: "/repair-manuals", icon: BookOpenText },
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
   { name: "Users", href: "/users", icon: UsersIcon },
@@ -61,7 +61,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/repair-tasks" element={<RepairLogs />} />
               <Route path="/spare-parts" element={<SpareParts />} />
-              <Route path="/repair-guide" element={<RepairGuide />} />
+              <Route path="/repair-manuals" element={<RepairManuals />} />
               <Route path="/history" element={<RepairHistory />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
