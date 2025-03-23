@@ -106,7 +106,7 @@ export default function RepairLogs() {
 
   async function fetchUsers() {
     try {
-      const { data, error } = await supabase.from("users").select("*");
+      const { data, error } = await supabase.from("users_profile").select("*");
 
       if (error) {
         throw error;

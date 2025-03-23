@@ -14,7 +14,7 @@ import RepairLogs from "./pages/RepairTasks";
 import RepairManuals from "./pages/RepairManuals";
 import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
-import UsersPage from "./pages/Users";
+import UsersPage from "./pages/UsersProfile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
@@ -24,15 +24,15 @@ const navigation = [
   { name: "Repair Manuals", href: "/repair-manuals", icon: BookOpenText },
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
-  { name: "Users", href: "/users", icon: UsersIcon },
+  { name: "Users Profile", href: "/users-profile", icon: UsersIcon },
 ];
 
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleMockLogin = (mockUser) => {
-    setUser(mockUser);
+  const handleLogin = (userData) => {
+    setUser(userData);
   };
 
   const handleLogout = () => {
@@ -49,7 +49,7 @@ function App() {
         </div>
       ) : !user ? (
         <Routes>
-          <Route path="/login" element={<Login onLogin={handleMockLogin} />} />
+          <Route path="/login" element={<Login onLogin={handleLogin} />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
@@ -63,7 +63,7 @@ function App() {
               <Route path="/spare-parts" element={<SpareParts />} />
               <Route path="/repair-manuals" element={<RepairManuals />} />
               <Route path="/history" element={<RepairHistory />} />
-              <Route path="/users" element={<UsersPage />} />
+              <Route path="/users-profile" element={<UsersPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>

@@ -19,7 +19,7 @@ export default function UsersPage() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("users")
+        .from("users_profile")
         .select("*")
         .order("created_at", { ascending: false });
 
@@ -38,7 +38,7 @@ export default function UsersPage() {
     event.preventDefault();
     try {
       const { data, error } = await supabase
-        .from("users")
+        .from("users_profile")
         .insert([{ email, full_name: fullName, role }]);
 
       if (error) {
@@ -60,7 +60,10 @@ export default function UsersPage() {
 
   async function deleteUser(userId) {
     try {
-      const { error } = await supabase.from("users").delete().eq("id", userId);
+      const { error } = await supabase
+        .from("users_profile")
+        .delete()
+        .eq("id", userId);
 
       if (error) {
         throw error;
@@ -79,7 +82,7 @@ export default function UsersPage() {
 
     try {
       const { data, error } = await supabase
-        .from("users")
+        .from("users_profile")
         .update({ email, full_name: fullName, role })
         .eq("id", editingUser.id);
 

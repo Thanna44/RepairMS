@@ -43,14 +43,16 @@ export default function Signup() {
       if (data?.user) {
         try {
           // Create profile record
-          const { error: profileError } = await supabase.from("users").insert([
-            {
-              id: data.user.id,
-              full_name: fullName,
-              email: email,
-              role: "technician",
-            },
-          ]);
+          const { error: profileError } = await supabase
+            .from("users_profile")
+            .insert([
+              {
+                id: data.user.id,
+                full_name: fullName,
+                email: email,
+                role: "technician",
+              },
+            ]);
 
           if (profileError) throw profileError;
 

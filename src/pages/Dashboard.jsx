@@ -72,7 +72,7 @@ export default function Dashboard() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase.from("users").select("*");
+      const { data, error } = await supabase.from("users_profile").select("*");
       if (error) throw error;
       setUsers(data || []);
     } catch (error) {
