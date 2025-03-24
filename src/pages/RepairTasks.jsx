@@ -4,7 +4,7 @@ import repairDefaultPartsConfig from "../config/repairDefaultParts.json";
 import FilterSection from "../components/RepairLogs/FilterSection";
 import EditModal from "../components/RepairLogs/EditModal";
 import DeleteModal from "../components/RepairLogs/DeleteModal";
-import RepairGuideModal from "../components/RepairLogs/RepairGuideModal";
+import RepairGuideModal from "../components/RepairLogs/RepairManualModal";
 import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
 import toast, { Toaster } from "react-hot-toast";
 
