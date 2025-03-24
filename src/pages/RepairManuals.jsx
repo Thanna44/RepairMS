@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import AddRepairGuide from "../components/AddRepairGuide";
-import EditRepairGuide from "../components/EditRepairGuide";
+import AddRepairManual from "../components/AddRepairManual";
+import EditRepairManual from "../components/EditRepairManual";
 
 function RepairGuide() {
   const [guides, setGuides] = useState([]);
@@ -157,7 +157,7 @@ function RepairGuide() {
       ))}
 
       {showAddModal && (
-        <AddRepairGuide
+        <AddRepairManual
           onClose={() => setShowAddModal(false)}
           onSuccess={() => {
             fetchRepairGuides();
@@ -167,7 +167,7 @@ function RepairGuide() {
       )}
 
       {showEditModal && selectedGuide && (
-        <EditRepairGuide
+        <EditRepairManual
           guide={selectedGuide}
           onClose={() => {
             setShowEditModal(false);
