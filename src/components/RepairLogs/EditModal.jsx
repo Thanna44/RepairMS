@@ -31,13 +31,13 @@ export default function EditModal({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                Title
+                Device name
               </label>
               <input
                 type="text"
-                value={editForm.title}
+                value={editForm.device_name}
                 onChange={(e) =>
-                  setEditForm({ ...editForm, title: e.target.value })
+                  setEditForm({ ...editForm, device_name: e.target.value })
                 }
                 className="mt-1 block w-full border rounded-md shadow-sm p-2"
               />

@@ -41,7 +41,7 @@ export default function RepairLogsTable({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Title
+              Device name
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Status
@@ -72,7 +72,7 @@ export default function RepairLogsTable({
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="text-sm font-medium text-gray-900">
-                  {log.title}
+                  {log.device_name}
                 </div>
                 <div className="text-sm text-gray-500">{log.issue}</div>
               </td>
