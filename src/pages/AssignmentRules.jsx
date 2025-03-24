@@ -13,7 +13,7 @@ export default function AssignmentRules() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState(null);
   const [formData, setFormData] = useState({
-    title: "",
+    device_name: "",
     assigned_user_id: "",
   });
 
@@ -36,7 +36,7 @@ export default function AssignmentRules() {
           )
         `
         )
-        .order("title");
+        .order("device_name");
 
       if (error) throw error;
       setRules(data || []);
@@ -68,13 +68,13 @@ export default function AssignmentRules() {
       // Get unique device names from repair_tasks
       const { data, error } = await supabase
         .from("repair_tasks")
-        .select("title")
-        .order("title");
+        .select("device_name")
+        .order("device_name");
 
       if (error) throw error;
 
       // Get unique device names
-      const uniqueDevices = [...new Set(data.map((item) => item.title))];
+      const uniqueDevices = [...new Set(data.map((item) => item.device_name))];
       setDevices(uniqueDevices || []);
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -90,7 +90,7 @@ export default function AssignmentRules() {
         const { error } = await supabase
           .from("assignment_rules")
           .update({
-            title: formData.title,
+            device_name: formData.device_name,
             assigned_user_id: formData.assigned_user_id,
           })
           .eq("id", selectedRule.id);
@@ -100,7 +100,7 @@ export default function AssignmentRules() {
       } else {
         // Create new rule
         const { error } = await supabase.from("assignment_rules").insert({
-          title: formData.title,
+          device_name: formData.device_name,
           assigned_user_id: formData.assigned_user_id,
         });
 
@@ -110,7 +110,7 @@ export default function AssignmentRules() {
 
       setIsModalOpen(false);
       setSelectedRule(null);
-      setFormData({ title: "", assigned_user_id: "" });
+      setFormData({ device_name: "", assigned_user_id: "" });
       fetchRules();
     } catch (error) {
       console.error("Error saving rule:", error);
@@ -121,7 +121,7 @@ export default function AssignmentRules() {
   const handleEdit = (rule) => {
     setSelectedRule(rule);
     setFormData({
-      title: rule.title,
+      device_name: rule.device_name,
       assigned_user_id: rule.assigned_user_id,
     });
     setIsModalOpen(true);
@@ -163,7 +163,7 @@ export default function AssignmentRules() {
         <button
           onClick={() => {
             setSelectedRule(null);
-            setFormData({ title: "", assigned_user_id: "" });
+            setFormData({ device_name: "", assigned_user_id: "" });
             setIsModalOpen(true);
           }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 flex items-center"
@@ -192,7 +192,7 @@ export default function AssignmentRules() {
             {rules.map((rule) => (
               <tr key={rule.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {rule.title}
+                  {rule.device_name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {rule.users?.full_name || "Unassigned"}
@@ -234,9 +234,9 @@ export default function AssignmentRules() {
                     Device Name
                   </label>
                   <select
-                    value={formData.title}
+                    value={formData.device_name}
                     onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
+                      setFormData({ ...formData, device_name: e.target.value })
                     }
                     className="mt-1 block w-full border rounded-md shadow-sm p-2"
                     required

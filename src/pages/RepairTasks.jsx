@@ -20,7 +20,7 @@ export default function RepairLogs() {
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [users, setUsers] = useState([]);
   const [editForm, setEditForm] = useState({
-    title: "",
+    device_name: "",
     issue: "",
     status: "",
     priority: "",
@@ -76,7 +76,7 @@ export default function RepairLogs() {
 
       if (searchTerm) {
         query = query.or(
-          `title.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
+          `device_name.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
         );
       }
 
@@ -134,7 +134,7 @@ export default function RepairLogs() {
   const handleEditClick = (log) => {
     setSelectedLog(log);
     setEditForm({
-      title: log.title,
+      device_name: log.device_name,
       issue: log.issue,
       status: log.status,
       priority: log.priority,
@@ -177,7 +177,7 @@ export default function RepairLogs() {
     e.preventDefault();
 
     const formData = {
-      title: editForm.title,
+      device_name: editForm.device_name,
       issue: editForm.issue,
       status: editForm.status,
       priority: editForm.priority,
@@ -464,7 +464,7 @@ export default function RepairLogs() {
 
   useEffect(() => {
     const defaultConfig = repairDefaultPartsConfig.defaultParts.find(
-      (config) => config.title === editForm.title
+      (config) => config.device_name === editForm.device_name
     );
 
     if (defaultConfig) {
@@ -485,7 +485,7 @@ export default function RepairLogs() {
 
       setSelectedSpareParts([...selectedSpareParts, ...partsToAdd]);
     }
-  }, [editForm.title]);
+  }, [editForm.device_name]);
 
   const clearFilters = () => {
     setStartDate(null);
@@ -499,7 +499,7 @@ export default function RepairLogs() {
       const { data, error } = await supabase
         .from("repair_manuals")
         .select("*")
-        .eq("device_name", log.title)
+        .eq("device_name", log.device_name)
         .eq("issue", log.issue)
         .single();
       if (error) {
@@ -522,7 +522,7 @@ export default function RepairLogs() {
       const { data: rule, error: ruleError } = await supabase
         .from("assignment_rules")
         .select("*")
-        .eq("title", log.title)
+        .eq("device_name", log.device_name)
         .single();
 
       if (ruleError) {
@@ -606,7 +606,7 @@ export default function RepairLogs() {
         <button
           onClick={() =>
             handleEditClick({
-              title: "",
+              device_name: "",
               issue: "",
               status: "pending",
               priority: "low",
