@@ -1,36 +1,83 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { History } from "lucide-react";
+import FilterSection from "../components/RepairLogs/FilterSection";
+import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
+import RepairGuideModal from "../components/RepairLogs/RepairManualModal";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function RepairHistory() {
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState([]);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isRepairGuideModalOpen, setIsRepairGuideModalOpen] = useState(false);
+  const [selectedGuide, setSelectedGuide] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [dateField, setDateField] = useState("created_at");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetchRepairHistory();
+    fetchRepairLogsInitial();
+    fetchUsers();
   }, []);
 
-  async function fetchRepairHistory() {
-    setLoading(true);
+  useEffect(() => {
+    if (!initialLoading) {
+      fetchRepairLogs();
+    }
+  }, [searchTerm, startDate, endDate, dateField]);
+
+  async function fetchRepairLogsInitial() {
+    setInitialLoading(true);
     try {
       const { data, error } = await supabase
-        .from("repair_history")
-        .select(
-          `
-          *,
-          repair_logs (
-            title
-          ),
-          users (
-            full_name
-          )
-        `
-        )
+        .from("repair_tasks")
+        .select("*")
+        .eq("status", "completed")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setHistory(data || []);
+      setLogs(data || []);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching repair history:", error);
+      setError("Error fetching repair history data");
+    } finally {
+      setInitialLoading(false);
+    }
+  }
+
+  async function fetchRepairLogs() {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("repair_tasks")
+        .select("*")
+        .eq("status", "completed");
+
+      if (searchTerm) {
+        query = query.or(
+          `device_name.ilike.%${searchTerm}%,issue.ilike.%${searchTerm}%`
+        );
+      }
+
+      if (startDate) {
+        query = query.gte(dateField, startDate.toISOString());
+      }
+      if (endDate) {
+        const nextDay = new Date(endDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        query = query.lt(dateField, nextDay.toISOString());
+      }
+
+      query = query.order("created_at", { ascending: false });
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setLogs(data || []);
       setError(null);
     } catch (error) {
       console.error("Error fetching repair history:", error);
@@ -40,7 +87,52 @@ export default function RepairHistory() {
     }
   }
 
-  if (loading) {
+  async function fetchUsers() {
+    try {
+      const { data, error } = await supabase.from("users_profile").select("*");
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  }
+
+  const handleRowClick = async (log) => {
+    try {
+      const { data, error } = await supabase
+        .from("repair_manuals")
+        .select("*")
+        .eq("device_name", log.device_name)
+        .eq("issue", log.issue)
+        .single();
+      if (error) {
+        console.error("Error fetching repair guide:", error);
+        return;
+      }
+
+      if (data) {
+        setSelectedGuide(data);
+        setIsRepairGuideModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+    }
+  };
+
+  const clearFilters = () => {
+    setStartDate(null);
+    setEndDate(null);
+    setDateField("created_at");
+    setSearchTerm("");
+  };
+
+  if (initialLoading) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -66,55 +158,41 @@ export default function RepairHistory() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-6">
-        Repair History
-      </h1>
-
-      <div className="flow-root">
-        <ul role="list" className="-mb-8">
-          {history.map((item, itemIdx) => (
-            <li key={item.id}>
-              <div className="relative pb-8">
-                {itemIdx !== history.length - 1 ? (
-                  <span
-                    className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                    aria-hidden="true"
-                  />
-                ) : null}
-                <div className="relative flex space-x-3">
-                  <div>
-                    <span className="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center ring-8 ring-white">
-                      <History className="h-4 w-4 text-white" />
-                    </span>
-                  </div>
-                  <div className="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
-                    <div>
-                      <p className="text-sm text-gray-500">
-                        {item.action}{" "}
-                        <span className="font-medium text-gray-900">
-                          {item.repair_logs.title}
-                        </span>
-                      </p>
-                      {item.notes && (
-                        <p className="mt-2 text-sm text-gray-500">
-                          {item.notes}
-                        </p>
-                      )}
-                    </div>
-                    <div className="whitespace-nowrap text-right text-sm text-gray-500">
-                      <div>{item.users.full_name}</div>
-                      <time dateTime={item.created_at}>
-                        {new Date(item.created_at).toLocaleDateString()}
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+    <div className="p-4">
+      <Toaster position="top-right" />
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Repair History</h1>
       </div>
+
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <FilterSection
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          dateField={dateField}
+          setDateField={setDateField}
+          clearFilters={clearFilters}
+        />
+
+        <RepairLogsTable
+          logs={logs}
+          users={users}
+          onRowClick={handleRowClick}
+          isHistoryView={true}
+        />
+      </div>
+
+      <RepairGuideModal
+        isOpen={isRepairGuideModalOpen}
+        onClose={() => {
+          setIsRepairGuideModalOpen(false);
+          setSelectedGuide(null);
+        }}
+        guide={selectedGuide}
+      />
     </div>
   );
 }
