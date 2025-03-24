@@ -7,6 +7,7 @@ import {
   History,
   BookOpenText,
   Users as UsersIcon,
+  UserCog,
 } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
@@ -15,6 +16,7 @@ import RepairManuals from "./pages/RepairManuals";
 import SpareParts from "./pages/SpareParts";
 import RepairHistory from "./pages/RepairHistory";
 import UsersPage from "./pages/UsersProfile";
+import AssignmentRules from "./pages/AssignmentRules";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 
@@ -25,6 +27,7 @@ const navigation = [
   { name: "Spare Parts", href: "/spare-parts", icon: Package },
   { name: "History", href: "/history", icon: History },
   { name: "Users Profile", href: "/users-profile", icon: UsersIcon },
+  { name: "Task Assignment Rules", href: "/assignment-rules", icon: UserCog },
 ];
 
 function App() {
@@ -64,6 +67,7 @@ function App() {
               <Route path="/repair-manuals" element={<RepairManuals />} />
               <Route path="/history" element={<RepairHistory />} />
               <Route path="/users-profile" element={<UsersPage />} />
+              <Route path="/assignment-rules" element={<AssignmentRules />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
