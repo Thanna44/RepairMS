@@ -516,6 +516,63 @@ export default function RepairLogs() {
     }
   };
 
+  const handleAutoAssign = async (log) => {
+    try {
+      // Get assignment rule for this task title
+      const { data: rule, error: ruleError } = await supabase
+        .from("assignment_rules")
+        .select("*")
+        .eq("title", log.title)
+        .single();
+
+      if (ruleError) {
+        console.error("Error fetching assignment rule:", ruleError);
+        toast.error("No assignment rule found for this task");
+        return;
+      }
+
+      if (!rule || !rule.assigned_user_id) {
+        toast.error("No user assigned in the rule");
+        return;
+      }
+
+      // Update the task with the assigned user
+      const { error: updateError } = await supabase
+        .from("repair_tasks")
+        .update({
+          assigned_user_id: rule.assigned_user_id,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", log.id);
+
+      if (updateError) {
+        console.error("Error updating task assignment:", updateError);
+        toast.error("Failed to assign task");
+        return;
+      }
+
+      // Add to repair history
+      const { error: historyError } = await supabase
+        .from("repair_history")
+        .insert({
+          repair_task_id: log.id,
+          action: "Auto-assigned task",
+          user_id: rule.assigned_user_id,
+          created_at: new Date().toISOString(),
+        });
+
+      if (historyError) {
+        console.error("Error adding to history:", historyError);
+      }
+
+      toast.success("Task assigned successfully");
+      fetchRepairLogs(); // Refresh the task list
+    } catch (err) {
+      console.error("Error in handleAutoAssign:", err);
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
@@ -580,6 +637,7 @@ export default function RepairLogs() {
           onRowClick={handleRowClick}
           onEditClick={handleEditClick}
           onDeleteClick={handleDeleteClick}
+          onAutoAssign={handleAutoAssign}
         />
       </div>
 

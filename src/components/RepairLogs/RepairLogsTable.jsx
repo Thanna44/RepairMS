@@ -1,5 +1,5 @@
 import React from "react";
-import { PenTool, AlertCircle, CheckCircle } from "lucide-react";
+import { PenTool, AlertCircle, CheckCircle, UserPlus } from "lucide-react";
 
 export default function RepairLogsTable({
   logs,
@@ -7,6 +7,7 @@ export default function RepairLogsTable({
   onRowClick,
   onEditClick,
   onDeleteClick,
+  onAutoAssign,
 }) {
   const getStatusIcon = (status) => {
     switch (status) {
@@ -104,7 +105,19 @@ export default function RepairLogsTable({
                   ? new Date(log.updated_at).toLocaleDateString()
                   : "-"}
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                {!log.assigned_user_id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAutoAssign(log);
+                    }}
+                    className="text-green-600 hover:text-green-900 mr-4"
+                    title="Auto Assign"
+                  >
+                    <UserPlus className="h-5 w-5 inline-block" />
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
