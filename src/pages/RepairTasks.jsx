@@ -35,14 +35,14 @@ export default function RepairLogs() {
   const [sparePartSearch, setSparePartSearch] = useState("");
 
   useEffect(() => {
-    fetchRepairLogsInitial();
+    fetchRepairTasksInitial();
     fetchUsers();
     fetchSpareParts();
   }, []);
 
   useEffect(() => {
     if (!initialLoading) {
-      fetchRepairLogs();
+      fetchRepairTasks();
     }
   }, [searchTerm, startDate, endDate, dateField]);
 
@@ -50,7 +50,7 @@ export default function RepairLogs() {
     console.log("Users:", users);
   }, [users]);
 
-  async function fetchRepairLogsInitial() {
+  async function fetchRepairTasksInitial() {
     setInitialLoading(true);
     try {
       const { data, error } = await supabase
@@ -69,7 +69,7 @@ export default function RepairLogs() {
     }
   }
 
-  async function fetchRepairLogs() {
+  async function fetchRepairTasks() {
     setLoading(true);
     try {
       let query = supabase.from("repair_tasks").select("*");
@@ -353,7 +353,7 @@ export default function RepairLogs() {
           : "New repair log created successfully"
       );
       setIsEditModalOpen(false);
-      fetchRepairLogs();
+      fetchRepairTasks();
       fetchSpareParts(); // Refresh spare parts list to show updated quantities
     } catch (err) {
       console.error("Error in handleEditSubmit:", err);
@@ -426,7 +426,7 @@ export default function RepairLogs() {
 
       toast.success("Repair log deleted successfully");
       setIsDeleteDialogOpen(false);
-      fetchRepairLogs();
+      fetchRepairTasks();
       fetchSpareParts(); // Refresh spare parts list to show updated quantities
     } catch (err) {
       console.error("Error in handleDelete:", err);
@@ -566,7 +566,7 @@ export default function RepairLogs() {
       }
 
       toast.success("Task assigned successfully");
-      fetchRepairLogs(); // Refresh the task list
+      fetchRepairTasks(); // Refresh the task list
     } catch (err) {
       console.error("Error in handleAutoAssign:", err);
       toast.error("An unexpected error occurred");

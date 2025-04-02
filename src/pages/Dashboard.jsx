@@ -411,6 +411,9 @@ export default function Dashboard() {
                       <div className="text-sm font-medium text-gray-900">
                         {job.title}
                       </div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {job.device_name}
+                      </div>
                       <div className="text-sm text-gray-500">{job.issue}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
