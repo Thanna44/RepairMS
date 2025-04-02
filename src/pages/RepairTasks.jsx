@@ -24,7 +24,7 @@ export default function RepairLogs() {
     issue: "",
     status: "",
     priority: "",
-    assigned_user_id: "",
+    technician_id: "",
   });
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -138,7 +138,7 @@ export default function RepairLogs() {
       issue: log.issue,
       status: log.status,
       priority: log.priority,
-      assigned_user_id: log.assigned_user_id || "",
+      technician_id: log.technician_id || "",
     });
 
     // Load saved spare parts if they exist
@@ -181,7 +181,7 @@ export default function RepairLogs() {
       issue: editForm.issue,
       status: editForm.status,
       priority: editForm.priority,
-      assigned_user_id: editForm.assigned_user_id || null,
+      technician_id: editForm.technician_id || null,
       updated_at: new Date().toISOString(),
     };
 
