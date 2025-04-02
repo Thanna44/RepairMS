@@ -65,9 +65,9 @@ export default function AssignmentRules() {
 
   const fetchDevices = async () => {
     try {
-      // Get unique device names from repair_tasks
+      // Get unique device names from repair_manuals
       const { data, error } = await supabase
-        .from("repair_tasks")
+        .from("repair_manuals")
         .select("device_name")
         .order("device_name");
 
