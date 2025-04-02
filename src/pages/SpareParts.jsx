@@ -18,6 +18,8 @@ export default function SpareParts() {
   });
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingPart, setEditingPart] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [partToDelete, setPartToDelete] = useState(null);
 
   useEffect(() => {
     fetchSpareParts();
@@ -100,6 +102,23 @@ export default function SpareParts() {
     fetchSpareParts();
     setIsEditModalOpen(false);
     setEditingPart(null);
+  };
+
+  const handleDeletePart = async (partId) => {
+    const { error } = await supabase
+      .from("spare_parts")
+      .delete()
+      .eq("id", partId);
+
+    if (error) {
+      console.error("Error deleting spare part:", error);
+      return;
+    }
+
+    console.log("Successfully deleted spare part:", partId);
+    fetchSpareParts();
+    setIsDeleteModalOpen(false);
+    setPartToDelete(null);
   };
 
   const filteredParts = parts.filter((part) => {
@@ -225,7 +244,13 @@ export default function SpareParts() {
                 >
                   Edit
                 </button>
-                <button className="flex-1 text-red-600 hover:text-red-900 text-sm font-medium">
+                <button
+                  onClick={() => {
+                    setPartToDelete(part);
+                    setIsDeleteModalOpen(true);
+                  }}
+                  className="flex-1 text-red-600 hover:text-red-900 text-sm font-medium"
+                >
                   Delete
                 </button>
               </div>
@@ -510,6 +535,50 @@ export default function SpareParts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && partToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Confirm Delete</h2>
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setPartToDelete(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Are you sure you want to delete the part "{partToDelete.name}"?
+                This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setPartToDelete(null);
+                }}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDeletePart(partToDelete.id)}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
