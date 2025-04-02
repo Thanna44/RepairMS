@@ -536,6 +536,26 @@ export default function RepairLogs() {
         return;
       }
 
+      // Check if technician already has 3 or more pending tasks
+      const { data: existingTasks, error: tasksError } = await supabase
+        .from("repair_tasks")
+        .select("id")
+        .eq("technician_id", rule.assigned_user_id)
+        .neq("status", "complete");
+
+      if (tasksError) {
+        console.error("Error checking existing tasks:", tasksError);
+        toast.error("Error checking technician's workload");
+        return;
+      }
+
+      if (existingTasks && existingTasks.length >= 3) {
+        toast.error(
+          "Technician already has 3 or more incomplete tasks. Cannot assign more work."
+        );
+        return;
+      }
+
       // Update the task with the assigned user
       const { error: updateError } = await supabase
         .from("repair_tasks")
