@@ -540,7 +540,7 @@ export default function RepairLogs() {
       const { error: updateError } = await supabase
         .from("repair_tasks")
         .update({
-          assigned_user_id: rule.assigned_user_id,
+          technician_id: rule.assigned_user_id,
           updated_at: new Date().toISOString(),
         })
         .eq("id", log.id);
