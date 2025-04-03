@@ -24,7 +24,7 @@ export default function RepairLogs() {
     issue: "",
     status: "",
     priority: "",
-    technician_id: "",
+    assigned_user_id: "",
   });
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -142,7 +142,7 @@ export default function RepairLogs() {
       issue: log.issue,
       status: log.status,
       priority: log.priority,
-      technician_id: log.technician_id || "",
+      assigned_user_id: log.assigned_user_id || "",
     });
 
     // Load saved spare parts if they exist
@@ -185,7 +185,7 @@ export default function RepairLogs() {
       issue: editForm.issue,
       status: editForm.status,
       priority: editForm.priority,
-      technician_id: editForm.technician_id || null,
+      assigned_user_id: editForm.assigned_user_id || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -544,7 +544,7 @@ export default function RepairLogs() {
       const { data: existingTasks, error: tasksError } = await supabase
         .from("repair_tasks")
         .select("id")
-        .eq("technician_id", rule.assigned_user_id)
+        .eq("assigned_user_id", rule.assigned_user_id)
         .neq("status", "complete");
 
       if (tasksError) {
@@ -564,7 +564,7 @@ export default function RepairLogs() {
       const { error: updateError } = await supabase
         .from("repair_tasks")
         .update({
-          technician_id: rule.assigned_user_id,
+          assigned_user_id: rule.assigned_user_id,
           updated_at: new Date().toISOString(),
         })
         .eq("id", log.id);

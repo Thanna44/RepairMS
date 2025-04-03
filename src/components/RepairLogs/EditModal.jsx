@@ -94,11 +94,11 @@ export default function EditModal({
                 Assigned To
               </label>
               <select
-                value={editForm.technician_id}
+                value={editForm.assigned_user_id}
                 onChange={(e) =>
                   setEditForm({
                     ...editForm,
-                    technician_id: e.target.value,
+                    assigned_user_id: e.target.value,
                   })
                 }
                 className="mt-1 block w-full border rounded-md shadow-sm p-2"

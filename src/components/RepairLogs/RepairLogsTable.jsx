@@ -94,7 +94,7 @@ export default function RepairLogsTable({
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                {users.find((user) => user.id === log.technician_id)
+                {users.find((user) => user.id === log.assigned_user_id)
                   ?.full_name || "Unassigned"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -106,7 +106,7 @@ export default function RepairLogsTable({
                   : "-"}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                {!log.technician_id && (
+                {!log.assigned_user_id && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
