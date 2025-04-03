@@ -545,7 +545,7 @@ export default function RepairLogs() {
         .from("repair_tasks")
         .select("id")
         .eq("assigned_user_id", rule.assigned_user_id)
-        .neq("status", "complete");
+        .neq("status", "completed");
 
       if (tasksError) {
         console.error("Error checking existing tasks:", tasksError);
