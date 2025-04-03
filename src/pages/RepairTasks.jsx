@@ -56,6 +56,7 @@ export default function RepairLogs() {
       const { data, error } = await supabase
         .from("repair_tasks")
         .select("*")
+        .neq("status", "completed")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -72,7 +73,10 @@ export default function RepairLogs() {
   async function fetchRepairTasks() {
     setLoading(true);
     try {
-      let query = supabase.from("repair_tasks").select("*");
+      let query = supabase
+        .from("repair_tasks")
+        .select("*")
+        .neq("status", "completed");
 
       if (searchTerm) {
         query = query.or(
