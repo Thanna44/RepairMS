@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase";
 import FilterSection from "../components/RepairLogs/FilterSection";
 import RepairLogsTable from "../components/RepairLogs/RepairLogsTable";
 import RepairGuideModal from "../components/RepairLogs/RepairManualModal";
+import EditModal from "../components/RepairLogs/EditModal";
+import DeleteModal from "../components/RepairLogs/DeleteModal";
 import toast, { Toaster } from "react-hot-toast";
 
 export default function RepairHistory() {
@@ -11,16 +13,30 @@ export default function RepairHistory() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isRepairGuideModalOpen, setIsRepairGuideModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
   const [selectedGuide, setSelectedGuide] = useState(null);
   const [users, setUsers] = useState([]);
+  const [editForm, setEditForm] = useState({
+    device_name: "",
+    issue: "",
+    status: "",
+    priority: "",
+    technician_id: "",
+  });
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [dateField, setDateField] = useState("created_at");
   const [searchTerm, setSearchTerm] = useState("");
+  const [spareParts, setSpareParts] = useState([]);
+  const [selectedSpareParts, setSelectedSpareParts] = useState([]);
+  const [sparePartSearch, setSparePartSearch] = useState("");
 
   useEffect(() => {
     fetchRepairLogsInitial();
     fetchUsers();
+    fetchSpareParts();
   }, []);
 
   useEffect(() => {
@@ -103,6 +119,17 @@ export default function RepairHistory() {
     }
   }
 
+  async function fetchSpareParts() {
+    const { data, error } = await supabase.from("spare_parts").select("*");
+
+    if (error) {
+      console.error("Error fetching spare parts:", error);
+      return;
+    }
+
+    setSpareParts(data || []);
+  }
+
   const handleRowClick = async (log) => {
     try {
       const { data, error } = await supabase
@@ -125,11 +152,155 @@ export default function RepairHistory() {
     }
   };
 
+  const handleEditClick = (log) => {
+    setSelectedLog(log);
+    setEditForm({
+      device_name: log.device_name,
+      issue: log.issue,
+      status: log.status,
+      priority: log.priority,
+      technician_id: log.technician_id || "",
+    });
+
+    // Load saved spare parts if they exist
+    if (log.spare_parts) {
+      const savedSpareParts = log.spare_parts.map((sp) => {
+        const sparePart = spareParts.find(
+          (part) => part.name === sp.name && part.part_number === sp.part_number
+        );
+
+        return {
+          spare_part_id: sparePart?.id,
+          quantity: sp.quantity,
+          spare_part: {
+            id: sparePart?.id,
+            name: sp.name,
+            nsn: sp.nsn,
+            part_number: sp.part_number,
+            price: sp.price,
+          },
+        };
+      });
+      setSelectedSpareParts(savedSpareParts);
+    } else {
+      setSelectedSpareParts([]);
+    }
+
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (log) => {
+    setSelectedLog(log);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+
+    const formData = {
+      device_name: editForm.device_name,
+      issue: editForm.issue,
+      status: editForm.status,
+      priority: editForm.priority,
+      technician_id: editForm.technician_id || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      let error;
+
+      if (selectedLog?.id) {
+        const { error: updateError } = await supabase
+          .from("repair_tasks")
+          .update(formData)
+          .eq("id", selectedLog.id);
+        error = updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from("repair_tasks")
+          .insert({
+            ...formData,
+            created_at: new Date().toISOString(),
+          });
+        error = insertError;
+      }
+
+      if (error) {
+        console.error("Error saving repair log:", error);
+        toast.error("Error saving repair log");
+        return;
+      }
+
+      toast.success(
+        selectedLog?.id
+          ? "Repair log updated successfully"
+          : "New repair log created successfully"
+      );
+      setIsEditModalOpen(false);
+      fetchRepairLogs();
+    } catch (err) {
+      console.error("Error in handleEditSubmit:", err);
+      toast.error("An unexpected error occurred");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedLog) return;
+
+    try {
+      const { error: deleteError } = await supabase
+        .from("repair_tasks")
+        .delete()
+        .eq("id", selectedLog.id);
+
+      if (deleteError) {
+        console.error("Error deleting repair log:", deleteError);
+        toast.error("Error deleting repair log");
+        return;
+      }
+
+      toast.success("Repair log deleted successfully");
+      setIsDeleteDialogOpen(false);
+      fetchRepairLogs();
+    } catch (err) {
+      console.error("Error in handleDelete:", err);
+      toast.error("An unexpected error occurred");
+    }
+  };
+
   const clearFilters = () => {
     setStartDate(null);
     setEndDate(null);
     setDateField("created_at");
     setSearchTerm("");
+  };
+
+  const handleAddSparePart = (sparePartId) => {
+    const sparePart = spareParts.find((sp) => sp.id === sparePartId);
+    if (!sparePart) return;
+
+    setSelectedSpareParts([
+      ...selectedSpareParts,
+      {
+        spare_part_id: sparePart.id,
+        quantity: 1,
+        spare_part: sparePart,
+      },
+    ]);
+  };
+
+  const handleSparePartQuantityChange = (sparePartId, quantity) => {
+    setSelectedSpareParts(
+      selectedSpareParts.map((sp) =>
+        sp.spare_part_id === sparePartId ? { ...sp, quantity } : sp
+      )
+    );
+  };
+
+  const handleRemoveSparePart = (sparePartId) => {
+    setSelectedSpareParts(
+      selectedSpareParts.filter((sp) => sp.spare_part_id !== sparePartId)
+    );
   };
 
   if (initialLoading) {
@@ -181,9 +352,34 @@ export default function RepairHistory() {
           logs={logs}
           users={users}
           onRowClick={handleRowClick}
+          onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
           isHistoryView={true}
         />
       </div>
+
+      <EditModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        selectedLog={selectedLog}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        handleSubmit={handleEditSubmit}
+        users={users}
+        sparePartSearch={sparePartSearch}
+        setSparePartSearch={setSparePartSearch}
+        spareParts={spareParts}
+        handleAddSparePart={handleAddSparePart}
+        selectedSpareParts={selectedSpareParts}
+        handleSparePartQuantityChange={handleSparePartQuantityChange}
+        handleRemoveSparePart={handleRemoveSparePart}
+      />
+
+      <DeleteModal
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onDelete={handleDelete}
+      />
 
       <RepairGuideModal
         isOpen={isRepairGuideModalOpen}
