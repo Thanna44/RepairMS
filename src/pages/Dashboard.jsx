@@ -35,9 +35,13 @@ const datePickerWrapperStyles = `
 `;
 
 export default function Dashboard() {
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [dateField, setDateField] = useState("created_at");
+  const [startDate, setStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(1); // First day of current month
+    return date;
+  });
+  const [endDate, setEndDate] = useState(new Date());
+  const [dateField, setDateField] = useState("updated_at");
   const [searchTerm, setSearchTerm] = useState("");
   const [repairStats, setRepairStats] = useState({
     active: 0,
