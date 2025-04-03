@@ -117,7 +117,7 @@ export default function Dashboard() {
 
       // Calculate status distribution for pie chart
       const distribution = [
-        { name: "In Progress", value: stats.active },
+        { name: "In Progress", value: stats.in_progress },
         { name: "Completed", value: stats.completed },
         { name: "Pending", value: stats.pending },
       ];
@@ -129,11 +129,20 @@ export default function Dashboard() {
         const date = new Date(log[dateField]);
         const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
         if (!monthlyData[monthYear]) {
-          monthlyData[monthYear] = { total: 0, completed: 0 };
+          monthlyData[monthYear] = {
+            total: 0,
+            completed: 0,
+            in_progress: 0,
+            pending: 0,
+          };
         }
         monthlyData[monthYear].total += 1;
         if (log.status === "completed") {
           monthlyData[monthYear].completed += 1;
+        } else if (log.status === "in_progress") {
+          monthlyData[monthYear].in_progress += 1;
+        } else if (log.status === "pending") {
+          monthlyData[monthYear].pending += 1;
         }
       });
 
@@ -142,6 +151,8 @@ export default function Dashboard() {
           month,
           total: data.total,
           completed: data.completed,
+          in_progress: data.in_progress,
+          pending: data.pending,
         })
       );
 
@@ -155,32 +166,32 @@ export default function Dashboard() {
 
   const stats = [
     {
-      name: "Active Repairs",
+      name: "In progress Repairs",
       value: repairStats.active.toString(),
       icon: Tool,
-      change: "+2.1%",
-      changeType: "positive",
+      change: "",
+      changeType: "neutral",
     },
     {
       name: "Completed Repairs",
       value: repairStats.completed.toString(),
       icon: BarChartIcon,
-      change: "+4.3%",
-      changeType: "positive",
+      change: "",
+      changeType: "neutral",
     },
     {
       name: "Pending Repairs",
       value: repairStats.pending.toString(),
       icon: Calendar,
-      change: "-0.7%",
-      changeType: "negative",
+      change: "",
+      changeType: "neutral",
     },
     {
       name: "Total Repairs",
       value: repairStats.total.toString(),
       icon: Package,
-      change: "+3.2%",
-      changeType: "positive",
+      change: "",
+      changeType: "neutral",
     },
   ];
 
@@ -318,8 +329,9 @@ export default function Dashboard() {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="total" fill="#4F46E5" name="Total Repairs" />
                 <Bar dataKey="completed" fill="#22C55E" name="Completed" />
+                <Bar dataKey="in_progress" fill="#3B82F6" name="In Progress" />
+                <Bar dataKey="pending" fill="#EAB308" name="Pending" />
               </BarChart>
             </ResponsiveContainer>
           </div>
