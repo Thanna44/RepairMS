@@ -125,7 +125,7 @@ export default function SpareParts() {
     const searchLower = searchTerm.toLowerCase();
     return (
       part.name.toLowerCase().includes(searchLower) ||
-      part.nsn.toLowerCase().includes(searchLower)
+      part.part_number.toLowerCase().includes(searchLower)
     );
   });
 
@@ -170,7 +170,7 @@ export default function SpareParts() {
         <div className="relative">
           <input
             type="text"
-            placeholder="ค้นหาด้วยชื่อหรือ NSN..."
+            placeholder="ค้นหาด้วยชื่อหรือ Part Number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
