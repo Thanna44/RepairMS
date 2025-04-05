@@ -555,7 +555,7 @@ export default function RepairLogs() {
 
       if (existingTasks && existingTasks.length >= 3) {
         toast.error(
-          "Technician already has 3 or more incomplete tasks. Cannot assign more work."
+          "ไม่สามารถมอบหมายงานเพิ่มเติมได้ เนื่องจากช่างมีงานที่ยังไม่เสร็จสมบูรณ์เกิน 3 งานขึ้นไป"
         );
         return;
       }
