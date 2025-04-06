@@ -170,14 +170,14 @@ export default function Dashboard() {
 
   const stats = [
     {
-      name: "In progress Repairs",
+      name: "กำลังดำเนินการซ่อม",
       value: repairStats.active.toString(),
       icon: Tool,
       change: "",
       changeType: "neutral",
     },
     {
-      name: "Completed Repairs",
+      name: "ซ่อมเสร็จแล้ว",
       value: repairStats.completed.toString(),
       icon: BarChartIcon,
       change: "",
