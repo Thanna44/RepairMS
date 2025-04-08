@@ -33,6 +33,7 @@ export default function RepairLogs() {
   const [spareParts, setSpareParts] = useState([]);
   const [selectedSpareParts, setSelectedSpareParts] = useState([]);
   const [sparePartSearch, setSparePartSearch] = useState("");
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     fetchRepairTasksInitial();
@@ -50,14 +51,45 @@ export default function RepairLogs() {
     console.log("Users:", users);
   }, [users]);
 
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+  async function fetchCurrentUser() {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from("users_profile")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (error) throw error;
+        setCurrentUser(data);
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  }
+
   async function fetchRepairTasksInitial() {
     setInitialLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("repair_tasks")
         .select("*")
         .neq("status", "completed")
         .order("created_at", { ascending: false });
+
+      // Filter by assigned user if not admin
+      if (currentUser && currentUser.role !== "admin") {
+        query = query.eq("assigned_user_id", currentUser.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setLogs(data || []);
@@ -77,6 +109,11 @@ export default function RepairLogs() {
         .from("repair_tasks")
         .select("*")
         .neq("status", "completed");
+
+      // Filter by assigned user if not admin
+      if (currentUser && currentUser.role !== "admin") {
+        query = query.eq("assigned_user_id", currentUser.id);
+      }
 
       if (searchTerm) {
         query = query.or(
@@ -627,19 +664,21 @@ export default function RepairLogs() {
       <Toaster position="top-right" />
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Repair Tasks</h1>
-        <button
-          onClick={() =>
-            handleEditClick({
-              device_name: "",
-              issue: "",
-              status: "pending",
-              priority: "low",
-            })
-          }
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-        >
-          Add New Log
-        </button>
+        {currentUser?.role === "admin" && (
+          <button
+            onClick={() =>
+              handleEditClick({
+                device_name: "",
+                issue: "",
+                status: "pending",
+                priority: "low",
+              })
+            }
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+          >
+            Add New Log
+          </button>
+        )}
       </div>
 
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
