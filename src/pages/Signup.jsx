@@ -11,6 +11,7 @@ export default function Signup() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState("technician");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -34,6 +35,7 @@ export default function Signup() {
         options: {
           data: {
             full_name: fullName,
+            role: role,
           },
         },
       });
@@ -50,7 +52,7 @@ export default function Signup() {
                 id: data.user.id,
                 full_name: fullName,
                 email: email,
-                role: "technician",
+                role: role,
               },
             ]);
 
@@ -154,6 +156,28 @@ export default function Signup() {
                   className="pl-10 block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="ชื่อ นามสกุล"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="role"
+                className="block text-sm font-medium text-gray-700"
+              >
+                บทบาท
+              </label>
+              <div className="mt-1">
+                <select
+                  id="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="block w-full border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                >
+                  <option value="technician">ช่างเทคนิค</option>
+                  <option value="officer">เจ้าหน้าที่</option>
+                  <option value="admin">ผู้ดูแลระบบ</option>
+                </select>
               </div>
             </div>
 
