@@ -34,12 +34,25 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Filter navigation items based on user role
+  const filteredNavigation = navigation.filter((item) => {
+    if (!user || user.role !== "admin") {
+      return !["/users-profile", "/assignment-rules", "/"].includes(item.href);
+    }
+    return true;
+  });
+
   const handleLogin = (userData) => {
     setUser(userData);
   };
 
   const handleLogout = () => {
     setUser(null);
+  };
+
+  // Get default redirect path based on role
+  const getDefaultPath = () => {
+    return user?.role === "admin" ? "/" : "/repair-tasks";
   };
 
   useEffect(() => {}, []);
@@ -58,17 +71,27 @@ function App() {
         </Routes>
       ) : (
         <div className="min-h-screen bg-gray-100">
-          <Navbar navigation={navigation} onLogout={handleLogout} />
+          <Navbar navigation={filteredNavigation} onLogout={handleLogout} />
           <main className="p-8 pt-24">
             <Routes>
-              <Route path="/" element={<Dashboard />} />
+              {user.role === "admin" && (
+                <>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/users-profile" element={<UsersPage />} />
+                  <Route
+                    path="/assignment-rules"
+                    element={<AssignmentRules />}
+                  />
+                </>
+              )}
               <Route path="/repair-tasks" element={<RepairLogs />} />
               <Route path="/spare-parts" element={<SpareParts />} />
               <Route path="/repair-manuals" element={<RepairManuals />} />
               <Route path="/history" element={<RepairHistory />} />
-              <Route path="/users-profile" element={<UsersPage />} />
-              <Route path="/assignment-rules" element={<AssignmentRules />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to={getDefaultPath()} replace />}
+              />
             </Routes>
           </main>
         </div>
