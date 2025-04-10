@@ -31,11 +31,8 @@ export default function EditModal({
 
   return (
     <div className="fixed inset-0 z-50">
-      {/* Backdrop with blur effect */}
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      {/* Backdrop - removed blur for better performance */}
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
 
       <div className="fixed inset-0 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
@@ -49,7 +46,7 @@ export default function EditModal({
                 <PDFDownloadLink
                   document={<RepairTaskPDF data={pdfData} users={users} />}
                   fileName={`repair-task-${selectedLog.id}.pdf`}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                 >
                   {({ blob, url, loading, error }) =>
                     loading ? "Loading document..." : "Export PDF"
@@ -75,7 +72,7 @@ export default function EditModal({
                           device_name: e.target.value,
                         })
                       }
-                      className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                   <div>
@@ -88,7 +85,7 @@ export default function EditModal({
                         setEditForm({ ...editForm, issue: e.target.value })
                       }
                       rows={3}
-                      className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -101,7 +98,7 @@ export default function EditModal({
                         onChange={(e) =>
                           setEditForm({ ...editForm, status: e.target.value })
                         }
-                        className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                       >
                         <option value="pending">Pending</option>
                         <option value="in_progress">In Progress</option>
@@ -117,7 +114,7 @@ export default function EditModal({
                         onChange={(e) =>
                           setEditForm({ ...editForm, priority: e.target.value })
                         }
-                        className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                       >
                         <option value="low">Low</option>
                         <option value="medium">Medium</option>
@@ -137,7 +134,7 @@ export default function EditModal({
                           assigned_user_id: e.target.value,
                         })
                       }
-                      className="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                      className="w-full border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                     >
                       <option value="">Unassigned</option>
                       {users.map((user) => (
@@ -158,7 +155,7 @@ export default function EditModal({
                         value={sparePartSearch}
                         onChange={(e) => setSparePartSearch(e.target.value)}
                         placeholder="Search spare parts..."
-                        className="flex-1 border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+                        className="flex-1 border-gray-300 rounded-lg shadow-sm focus:ring-1 focus:ring-indigo-500"
                       />
                     </div>
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -176,7 +173,7 @@ export default function EditModal({
                             return (
                               <div
                                 key={part.id}
-                                className={`flex items-center justify-between p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                                className={`flex items-center justify-between p-3 border-b border-gray-100 hover:bg-gray-50 ${
                                   isSelected
                                     ? "bg-gray-100 cursor-not-allowed opacity-60"
                                     : "cursor-pointer"
@@ -233,7 +230,7 @@ export default function EditModal({
                                   parseInt(e.target.value)
                                 )
                               }
-                              className="w-20 border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                              className="w-20 border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-indigo-500"
                               onClick={(e) => e.stopPropagation()}
                             />
                             <button
@@ -243,7 +240,7 @@ export default function EditModal({
                                 e.stopPropagation();
                                 handleRemoveSparePart(sp.spare_part_id);
                               }}
-                              className="text-red-600 hover:text-red-900 transition-colors"
+                              className="text-red-600 hover:text-red-800"
                             >
                               Remove
                             </button>
@@ -262,14 +259,14 @@ export default function EditModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   onClick={handleSubmit}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                 >
                   {selectedLog?.id ? "Update" : "Create"}
                 </button>
