@@ -140,13 +140,14 @@ export default function UsersPage() {
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">
         รายชื่อผู้ใช้งาน
       </h1>
-
-      <button
-        onClick={() => setShowForm(true)}
-        className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-      >
-        Add User
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowForm(true)}
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 my-4 "
+        >
+          Add User
+        </button>
+      </div>
 
       {showForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
