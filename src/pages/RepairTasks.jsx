@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import repairDefaultPartsConfig from "../config/repairDefaultParts.json";
 import FilterSection from "../components/RepairLogs/FilterSection";
 import EditModal from "../components/RepairLogs/EditModal";
 import DeleteModal from "../components/RepairLogs/DeleteModal";
@@ -502,31 +501,6 @@ export default function RepairLogs() {
       selectedSpareParts.filter((sp) => sp.spare_part_id !== sparePartId)
     );
   };
-
-  useEffect(() => {
-    const defaultConfig = repairDefaultPartsConfig.defaultParts.find(
-      (config) => config.device_name === editForm.device_name
-    );
-
-    if (defaultConfig) {
-      const defaultParts = spareParts.filter((sp) =>
-        defaultConfig.part_number.includes(sp.part_number)
-      );
-
-      const newSpareParts = defaultParts.map((part) => ({
-        spare_part_id: part.id,
-        quantity: 1,
-        spare_part: part,
-      }));
-
-      const existingPartIds = selectedSpareParts.map((sp) => sp.spare_part_id);
-      const partsToAdd = newSpareParts.filter(
-        (part) => !existingPartIds.includes(part.spare_part_id)
-      );
-
-      setSelectedSpareParts([...selectedSpareParts, ...partsToAdd]);
-    }
-  }, [editForm.device_name]);
 
   const clearFilters = () => {
     setStartDate(null);

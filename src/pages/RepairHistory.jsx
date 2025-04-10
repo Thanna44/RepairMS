@@ -23,7 +23,7 @@ export default function RepairHistory() {
     issue: "",
     status: "",
     priority: "",
-    technician_id: "",
+    assigned_user_id: "",
   });
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -159,7 +159,7 @@ export default function RepairHistory() {
       issue: log.issue,
       status: log.status,
       priority: log.priority,
-      technician_id: log.technician_id || "",
+      assigned_user_id: log.assigned_user_id || "",
     });
 
     // Load saved spare parts if they exist
@@ -202,7 +202,7 @@ export default function RepairHistory() {
       issue: editForm.issue,
       status: editForm.status,
       priority: editForm.priority,
-      technician_id: editForm.technician_id || null,
+      assigned_user_id: editForm.assigned_user_id || null,
       updated_at: new Date().toISOString(),
     };
 
