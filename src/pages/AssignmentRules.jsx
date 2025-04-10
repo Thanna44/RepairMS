@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import DeleteModal from "../components/RepairLogs/DeleteModal";
 
@@ -200,18 +200,18 @@ export default function AssignmentRules() {
                 <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                   <button
                     onClick={() => handleEdit(rule)}
-                    className="text-indigo-600 hover:text-indigo-900 inline-flex items-center justify-center mr-4"
+                    className="text-indigo-600 hover:text-indigo-900 mr-4"
                   >
-                    <Edit2 className="h-5 w-5" />
+                    Edit
                   </button>
                   <button
                     onClick={() => {
                       setSelectedRule(rule);
                       setIsDeleteModalOpen(true);
                     }}
-                    className="text-red-600 hover:text-red-900 inline-flex items-center justify-center"
+                    className="text-red-600 hover:text-red-900"
                   >
-                    <Trash2 className="h-5 w-5" />
+                    Delete
                   </button>
                 </td>
               </tr>
