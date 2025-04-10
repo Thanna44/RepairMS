@@ -1,4 +1,6 @@
 import React from "react";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import RepairTaskPDF from "./RepairTaskPDF";
 
 export default function EditModal({
   isOpen,
@@ -18,12 +20,34 @@ export default function EditModal({
 }) {
   if (!isOpen) return null;
 
+  const pdfData = {
+    ...editForm,
+    spare_parts: selectedSpareParts.map((sp) => ({
+      name: sp.spare_part.name,
+      part_number: sp.spare_part.part_number,
+      quantity: sp.quantity,
+    })),
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center overflow-y-auto">
       <div className="bg-white p-6 rounded-lg w-full max-w-2xl m-4">
-        <h2 className="text-xl font-semibold mb-4">
-          {selectedLog?.id ? "Edit Repair Log" : "Add New Repair Log"}
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">
+            {selectedLog?.id ? "Edit Repair Log" : "Add New Repair Log"}
+          </h2>
+          {selectedLog?.id && (
+            <PDFDownloadLink
+              document={<RepairTaskPDF data={pdfData} users={users} />}
+              fileName={`repair-task-${selectedLog.id}.pdf`}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 mr-4"
+            >
+              {({ blob, url, loading, error }) =>
+                loading ? "Loading document..." : "Export PDF"
+              }
+            </PDFDownloadLink>
+          )}
+        </div>
         <form
           onSubmit={handleSubmit}
           className="max-h-[calc(100vh-200px)] overflow-y-auto"
