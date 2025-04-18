@@ -35,12 +35,18 @@ export default function RepairLogs() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    fetchCurrentUser().then(() => {
-      fetchRepairTasksInitial();
-      fetchUsers();
-      fetchSpareParts();
-    });
+    // เอา fetchUsers และ fetchSpareParts ออกมาจาก fetchCurrentUser เพื่อให้ทำงานแยกกัน
+    fetchCurrentUser();
+    fetchUsers();
+    fetchSpareParts();
   }, []);
+
+  // เพิ่ม useEffect ใหม่เพื่อดึงข้อมูล repair tasks เมื่อ currentUser พร้อม
+  useEffect(() => {
+    if (currentUser) {
+      fetchRepairTasksInitial();
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (!initialLoading && currentUser) {
@@ -51,10 +57,6 @@ export default function RepairLogs() {
   useEffect(() => {
     console.log("Users:", users);
   }, [users]);
-
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
 
   async function fetchCurrentUser() {
     try {
@@ -85,7 +87,7 @@ export default function RepairLogs() {
         .neq("status", "completed")
         .order("created_at", { ascending: false });
 
-      // Filter for technician role only
+      // Filter for technician role
       if (currentUser?.role === "technician") {
         query = query.eq("assigned_user_id", currentUser.id);
       }
