@@ -389,8 +389,8 @@ export default function RepairLogs() {
 
       toast.success(
         selectedLog?.id
-          ? "Repair log updated successfully"
-          : "New repair log created successfully"
+          ? "ทำการอัพเดทเรียบร้อยแล้ว"
+          : "ทำการสร้างใหม่เรียบร้อยแล้ว"
       );
       setIsEditModalOpen(false);
       fetchRepairTasks();
