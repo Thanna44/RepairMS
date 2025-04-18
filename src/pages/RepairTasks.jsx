@@ -35,24 +35,28 @@ export default function RepairLogs() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    fetchRepairTasksInitial();
+    // เอา fetchUsers และ fetchSpareParts ออกมาจาก fetchCurrentUser เพื่อให้ทำงานแยกกัน
+    fetchCurrentUser();
     fetchUsers();
     fetchSpareParts();
   }, []);
 
+  // เพิ่ม useEffect ใหม่เพื่อดึงข้อมูล repair tasks เมื่อ currentUser พร้อม
   useEffect(() => {
-    if (!initialLoading) {
+    if (currentUser) {
+      fetchRepairTasksInitial();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    if (!initialLoading && currentUser) {
       fetchRepairTasks();
     }
-  }, [searchTerm, startDate, endDate, dateField]);
+  }, [searchTerm, startDate, endDate, dateField, currentUser]);
 
   useEffect(() => {
     console.log("Users:", users);
   }, [users]);
-
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
 
   async function fetchCurrentUser() {
     try {
@@ -83,8 +87,8 @@ export default function RepairLogs() {
         .neq("status", "completed")
         .order("created_at", { ascending: false });
 
-      // Filter by assigned user if not admin
-      if (currentUser && currentUser.role !== "admin") {
+      // Filter for technician role
+      if (currentUser?.role === "technician") {
         query = query.eq("assigned_user_id", currentUser.id);
       }
 
@@ -109,8 +113,8 @@ export default function RepairLogs() {
         .select("*")
         .neq("status", "completed");
 
-      // Filter by assigned user if not admin
-      if (currentUser && currentUser.role !== "admin") {
+      // Filter for technician role only
+      if (currentUser?.role === "technician") {
         query = query.eq("assigned_user_id", currentUser.id);
       }
 
@@ -221,7 +225,11 @@ export default function RepairLogs() {
       issue: editForm.issue,
       status: editForm.status,
       priority: editForm.priority,
-      assigned_user_id: editForm.assigned_user_id || null,
+      assigned_user_id:
+        editForm.assigned_user_id ||
+        (!currentUser?.role || currentUser.role !== "admin"
+          ? currentUser?.id
+          : null),
       updated_at: new Date().toISOString(),
     };
 
